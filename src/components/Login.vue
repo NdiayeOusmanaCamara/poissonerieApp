@@ -1,117 +1,54 @@
 <template>
-    <div class="login-container">
-      <h2>Login</h2>
-      <form @submit.prevent="login">
-        <div class="form-group">
+  <div class="container d-flex justify-content-center align-items-center vh-100">
+    <div class="card p-4" style="width: 400px;">
+      <h2 class="text-center mb-4">Login</h2>
+
+      <form @submit.prevent="handleSubmit">
+        <div class="form-group mb-3">
           <label for="email">Email</label>
-          <input v-model="email" type="email" id="email" required />
+          <input type="email" v-model="email" class="form-control" id="email" placeholder="Entrer votre email"
+            required />
         </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input v-model="password" type="password" id="password" required />
+
+        <div class="form-group mb-3">
+          <label for="password">Mot de passe</label>
+          <input type="password" v-model="password" class="form-control" id="password"
+            placeholder="Entrer votre mot de passe" required />
         </div>
-        <button type="submit" class="login-button">Log In</button>
+
+        <!-- Remplacement du router-link par un bouton -->
+        <button type="submit" class="btn btn-success w-100">Se connecter</button>
       </form>
-      <p v-if="error" class="error-message">{{ error }}</p>
+
+      <p v-if="errorMessage" class="text-danger mt-3">{{ errorMessage }}</p>
     </div>
-  </template>
-  
-  <script setup>
-  import { ref } from 'vue';
-  import { useRouter } from 'vue-router';
-  
-  const email = ref('');
-  const password = ref('');
-  const error = ref(null);
-  
-  const router = useRouter();
-  
-  const login = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.value, password: password.value }),
-      });
-  
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Login error');
-      }
-  
-      localStorage.setItem('authToken', data.token);
-      router.push('/dashboard');
-    } catch (err) {
-      error.value = err.message;
-    }
-  };
-  </script>
-  
-  <style scoped>
-  /* Center the login container on the page */
-  .login-container {
-    max-width: 400px;
-    margin: auto;
-    padding: 2rem;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    transform: translateY(50%);
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import {useAuthStore} from '@stores/authStore.js';
+import { useRouter } from "vue-router";
+
+const store = useAuthStore();
+const router = useRouter();
+const email = ref('');
+const password = ref('');
+const errorMessage = ref('');
+
+
+const handleSubmit = async () => {
+  try {
+    await store.login(email.value, password.value);
+    router.push("/dashboard"); // Navigation vers le tableau de bord
+  } catch (error) {
+    errorMessage.value = "Une erreur est survenue lors de la connexion.";
   }
-  
-  h2 {
-    color: #333;
-    margin-bottom: 1.5rem;
-  }
-  
-  .form-group {
-    margin-bottom: 1.5rem;
-    text-align: left;
-  }
-  
-  label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    color: #555;
-  }
-  
-  input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 1rem;
-  }
-  
-  input:focus {
-    border-color: #007bff;
-    outline: none;
-  }
-  
-  .login-button {
-    width: 100%;
-    padding: 0.75rem;
-    background-color: #007bff;
-    color: #fff;
-    font-size: 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 1rem;
-    transition: background-color 0.3s;
-  }
-  
-  .login-button:hover {
-    background-color: #0056b3;
-  }
-  
-  .error-message {
-    color: red;
-    margin-top: 1rem;
-    font-size: 0.9rem;
-  }
-  </style>
-  
+}
+</script>
+
+<style scoped>
+.card {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+</style>

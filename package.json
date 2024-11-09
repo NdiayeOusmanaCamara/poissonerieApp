@@ -1,10 +1,10 @@
 {
-  "name": "gestion-rh",
-  "private": true,
+  "name": "poissonerie-app",
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
+    "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -13,16 +13,18 @@
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/free-solid-svg-icons": "^6.6.0",
     "@fortawesome/vue-fontawesome": "^3.0.8",
-    "@popperjs/core": "^2.11.8",
     "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
-    "pinia": "^2.2.2",
-    "vue": "^3.5.6",
-    "vue-i18n": "^10.0.3",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
+    "moment": "^2.30.1",
+    "pinia": "^2.2.4",
+    "vue": "^3.5.12",
     "vue-router": "^4.4.5"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.1.2",
-    "vite": "^5.4.9"
+    "@vitejs/plugin-vue": "^5.1.4",
+    "vite": "^5.4.10",
+    "vite-plugin-vue-devtools": "^7.5.3"
   }
 }
