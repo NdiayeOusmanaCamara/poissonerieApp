@@ -1,172 +1,180 @@
 <template>
   <div class="commande-detail">
-    <div class="form-content">
-      <h2>Modifier la commande </h2>
-      <form @submit.prevent="submitForm"> 
-        <div class=" btn-right-action mt-4 mb-4 d-flex justify-content-end">
-          <router-link class="btn btn-primary mt-3" to="/dashboard/commandes" >Retour à la liste</router-link>
-          <button type="submit" class="btn btn-success">Modifier</button>
+    <h2>Modifier la commande</h2>
+
+    <form @submit.prevent="handleSubmit">
+      <!-- Retour à la liste et soumission -->
+      <div class="d-flex justify-content-end gap-5">
+        <router-link to="/dashboard/commandes" class="btn btn-primary mt-3">Retour à la liste</router-link>
+        <button type="submit" class="btn btn-success">Enregistrer les modifications</button>
+      </div>
+
+      <!-- Nom et Date de la commande -->
+      <div class="d-flex justify-content-between gap-3 mt-3">
+        <div class="form-group w-100">
+          <label for="nom" class="form-label">Nom de la commande</label>
+          <input type="text" id="nom" v-model="form.nom" class="form-control" required />
         </div>
-        <div class="col-md-6">
-          <label for="nom">Nom</label>
-          <input type="text" id="nom" v-model="form.nom" class="form-control" />
+        <div class="form-group w-100">
+          <label for="date" class="form-label">Date</label>
+          <input type="date" id="date" v-model="form.date" class="form-control" required />
         </div>
-  
-        <div class="col-md-6">
-          <label for="statut">Statut</label>
-          <select id="statut" v-model="form.statut" class="form-control">
-            <option value="en attente">En attente</option>
-            <option value="en cours">En cours</option>
-            <option value="annulée">Annulée</option>
+      </div>
+
+      <!-- Utilisateur et Statut -->
+      <div class="d-flex justify-content-between gap-3 mt-3">
+        <div class="form-group w-100">
+          <label for="utilisateur" class="form-label">Utilisateur</label>
+          <select id="utilisateur" v-model="form.utilisateurId" class="form-control" required>
+            <option v-for="utilisateur in utilisateurs" :key="utilisateur.id" :value="utilisateur.id">
+              {{ utilisateur.nom }}
+            </option>
           </select>
         </div>
-  
-        <div class="col-md-6">
-          <label for="prix">Prix</label>
-          <input type="number" id="prix" v-model="form.prix" class="form-control" />
+        <div class="form-group w-100">
+          <label for="prix" class="form-label">Prix</label>
+          <input type="number" id="prix" v-model="form.prix" class="form-control" disabled />
         </div>
-        <div class="col-md-6">
-          <label for="date">Date</label>
-          <input type="dateTime" id="date" v-model="form.date" class="form-control" />
-        </div>
-  
-        <div class="col-md-6">
-          <label for="utilisateur">Utilisateur</label>
-          <input type="text" id="utilisateur" v-model="utilisateurNom" class="form-control" disabled />
-        </div>
-        <div class=" modal-footer d-flex justify-content-end gap-5">
-          <router-link class="btn btn-primary mt-3" to="/dashboard/commandes" >Retour à la liste</router-link>
-          <button type="submit" class="btn btn-success">Modifier</button>
-        </div>
-      </form>
-      <div class="row mt-5 mx-1">
-        <h2 class="mx-0">Commandes Details</h2>
-        <table class="table table-bordered">
-          <thead>
-            <tr>
-              <th scope="col">Produit</th>
-              <th scope="col">Quantite</th>
-              <th scope="col">Prix</th>
-              <th scope="col">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(detail, index) in order.details" :key="index">
-              <td>
-                <select v-model="detail.product" class="form-select">
-                  <option value="" disabled>Select Product</option>
-                  <option value="Product 1">Product 1</option>
-                  <option value="Product 2">Product 2</option>
-                </select>
-              </td>
-              <td>
-                <input v-model="detail.quantity" type="number" class="form-control" />
-              </td>
-              <td>
-                <input v-model="detail.price" type="number" class="form-control" readonly />
-              </td>
-              <td>
-                <button @click="removeDetail(index)" class="btn btn-danger">Remove</button>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="4">
-                <button @click="addDetail" class="btn btn-success">Add New Detail</button>
-              </td>
-            </tr>
-          </tbody>
+      </div>
 
-        </table>
-    </div>
-    </div>
+      <!-- Détails de la commande -->
+      <div class="mt-4">
+        <h3>Détails de la commande</h3>
+
+        <div v-for="(detail, index) in detailcommande" :key="index" class="mb-3">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="produit">Produit</label>
+                <select v-model="detail.produitId" class="form-control" required>
+                  <option disabled value="">Sélectionner un produit</option>
+                  <option v-for="produit in produits" :key="produit.id" :value="produit.id">
+                    {{ produit.nom }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <label for="quantite">Quantité</label>
+              <input type="number" v-model="detail.quantite" class="form-control" required />
+            </div>
+
+            <div class="col-md-3">
+              <label for="prix">Prix</label>
+              <input type="number" v-model="detail.prix" class="form-control" required />
+            </div>
+          </div>
+        </div>
+
+        <!-- Bouton pour ajouter un détail -->
+        <button type="button" @click="addDetail" class="btn btn-primary mt-3">Ajouter un détail</button>
+      </div>
+    </form>
   </div>
-  </template>
-  
-  <script setup>
-  import { ref, reactive, onMounted } from 'vue';
-  import { useRoute, useRouter } from 'vue-router';
-  import { useCommandeStore } from '@stores/commandeStore';
-  
-  const route = useRoute();
-  const router = useRouter();
-  const store = useCommandeStore();
-  const commande = ref(null);
-  const utilisateurNom = ref('');
-  const form = reactive({
-    nom: '',
-    statut: '',
-    prix: 0,
-    date: '',
-  });
-  
-  onMounted(async () => {
-    const id = route.params.id;
-    await store.loadDataFromApi(); // Assure que les données sont chargées
-    commande.value = store.commandes.find((cmd) => cmd.id === parseInt(id));
-  
-    if (commande.value) {
-      // Remplir les champs du formulaire avec les données de la commande actuelle
-      form.nom = commande.value.nom;
-      form.statut = commande.value.statut;
-      form.prix = commande.value.prix;
-      form.date = commande.value.date;
-  
-      // Charger les utilisateurs et trouver le nom de l'utilisateur associé à cette commande
-      const utilisateurs = await store.loadUtilisateurs();
-      const utilisateur = utilisateurs.find(u => u.id === commande.value.utilisateurId);
-      utilisateurNom.value = utilisateur ? utilisateur.nom : 'Utilisateur inconnu';
-    }
-  });
-  
-  // Fonction pour soumettre le formulaire
-  async function submitForm() {
-    // Mettre à jour les données dans le store
-    const updatedCommande = {
-      ...commande.value,
-      nom: form.nom,
-      statut: form.statut,
-      prix: form.prix
-    };
-  
-    await store.updatedCommande(commande.value.id, updatedCommande);
-  
-    // Rediriger l'utilisateur vers la liste après la modification
-    router.push('/dashboard/commandes');
-  }
-  </script>
-  
-  <style scoped>
-  .commande-detail {
-    max-width: 800px;
-    margin: 50px auto;
-    padding: 20px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  h2 {
-    margin-bottom: 20px;
-  }
-  
-  .form-group {
-    margin-bottom: 15px;
-  }
-  
-  .form-control {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-  }
-  
-  button {
-    margin-top: 20px;
-  }
-  
-  .btn-primary {
-    display: inline-block;
-    padding: 10px 20px;
-    text-decoration: none;
-  }
-  </style>
-  
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useCommandeStore } from '@stores/commandeStore';
+import { useProduitStore } from '@stores/produitStore';
+import { useUserStore } from '@stores/utilisateurStore';
+import { useRoute } from 'vue-router';
+
+// Stores pour récupérer les données
+const commandeStore = useCommandeStore();
+const produitStore = useProduitStore();
+const utilisateurStore = useUserStore();
+
+// Route pour obtenir l'ID de la commande
+const route = useRoute();
+const commandeId = route.params.id;
+
+// Variables du formulaire et données externes
+const form = ref({
+  nom: '',
+  date: '',
+  statut: '',
+  utilisateurId: null,
+  prix: 0,
+});
+const detailcommande = ref([{ produitId: '', quantite: 1, prix: 0 }]);
+
+// Chargement des utilisateurs et produits
+const utilisateurs = ref([]);
+const produits = ref([]);
+
+// Ajouter un détail de commande
+const addDetail = () => {
+  detailcommande.value.push({ produitId: '', quantite: 1, prix: 0 });
+};
+
+// Calcul du prix total de la commande
+const calculateTotalPrix = () => {
+  return detailcommande.value.reduce((total, detail) => total + detail.prix * detail.quantite, 0);
+};
+
+// Charger les données de la commande à modifier
+onMounted(async () => {
+  const commande = await commandeStore.getCommandeById(commandeId);
+  form.value = {
+    nom: commande.nom,
+    date: commande.date,
+    statut: commande.statut,
+    utilisateurId: commande.utilisateurId,
+    prix: calculateTotalPrix(),
+  };
+  detailcommande.value = commande.details.map(detail => ({
+    produitId: detail.produitId,
+    quantite: detail.quantite,
+    prix: detail.prix,
+  }));
+  utilisateurs.value = await utilisateurStore.loadUtilisateurs();
+  produits.value = await produitStore.loadProduits();
+});
+
+// Soumettre la modification de la commande
+const handleSubmit = async () => {
+  const totalPrix = calculateTotalPrix();
+
+  const commandeModifiee = {
+    id: commandeId,
+    nom: form.value.nom,
+    statut: form.value.statut,
+    prix: totalPrix,
+    date: form.value.date,
+    utilisateurId: form.value.utilisateurId,
+    details: detailcommande.value.map(detail => ({
+      produitId: detail.produitId,
+      quantite: detail.quantite,
+      prix: detail.prix,
+    })),
+  };
+
+  await commandeStore.updateCommande(commandeModifiee);
+};
+</script>
+
+<style scoped>
+/* Même style que pour ajouterCommande */
+.commande-detail {
+  max-width: 800px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h2, h3 {
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+button {
+  margin-top: 20px;
+}
+</style>

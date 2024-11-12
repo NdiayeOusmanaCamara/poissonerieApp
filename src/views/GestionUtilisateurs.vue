@@ -156,8 +156,8 @@ function viewUtilisateur(utilisateur) {
 }
 
 h2 {
-    font-size: 24px;
-    color: #4a4a4a;
+  font-size: 24px;
+  color: #090909;
 }
 
 .create-commande {
@@ -190,14 +190,14 @@ h2 {
 }
 
 .commande-table th {
-    background-color: #f9f9f9;
-    color: #666;
-    font-weight: bold;
+  background-color: #f9f9f9;
+  color: #090909;
+  font-weight: bold;
 }
 
 .commande-table td {
-    border-bottom: 1px solid #e3e3e3;
-    color: #333;
+  border-bottom: 1px solid #e3e3e3;
+  color: #090909;
 }
 
 .commande-table tbody tr:hover {

@@ -5,7 +5,7 @@
     <p><strong>ID :</strong> {{ paiement.id }}</p>
     <p><strong>Date :</strong> {{formatDate(paiement.date) }}</p>
     <p><strong>Montant :</strong> {{ paiement.montant }}</p>
-    <p><strong>Mode Paiement :</strong> {{ paiement.modePaiement }}</p>
+    <p><strong>Mode Paiement :</strong> {{ paiement.mode_paiement }}</p>
     <p><strong>Commande :</strong> {{ commandeNom }}</p>
     <p><strong>Utilisateur :</strong> {{ utilisateurNom }}</p>
   
@@ -41,7 +41,7 @@ onMounted(async () => {
   
     // Charger les utilisateurs et trouver l'utilisateur associé à la commande
     const utilisateurs = await store.loadUtilisateurs();
-    const utilisateur = utilisateurs.find(u => u.id === commande.utilisateurId); // Corrected line
+    const utilisateur = utilisateurs.find(u => u.id === paiement.value.utilisateurId); // Corrected line
     utilisateurNom.value = utilisateur ? utilisateur.nom : 'Utilisateur inconnu';
   }
 });

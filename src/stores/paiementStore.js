@@ -59,12 +59,8 @@ export const usePaiementStore = defineStore("paiements", {
     
     async loadUtilisateurs() {
       try {
-        const token = this.getToken(); // Récupérer le token JWT
-        const resp = await axios.get("http://localhost:3000/utilisateurs", {
-          headers: {
-            Authorization: `Bearer ${token}` // Ajouter le token aux en-têtes
-          }
-        });
+  
+        const resp = await axios.get("http://localhost:3000/utilisateurs",);
         this.utilisateurs = resp.data;
         return this.utilisateurs; 
       } catch (error) {
@@ -105,7 +101,7 @@ export const usePaiementStore = defineStore("paiements", {
     async addPaiement(newPaiement) {
       try {
         const token = this.getToken(); // Récupérer le token JWT
-        const response = await axios.post('http://localhost:3000/paiements', newProduit, {
+        const response = await axios.post('http://localhost:3000/paiements', newPaiement, {
           headers: {
             Authorization: `Bearer ${token}` // Ajouter le token aux en-têtes
           }
@@ -154,4 +150,3 @@ async deleteCommande(id) {
 },
 },
 });
-

@@ -8,7 +8,7 @@
     <p><strong>Quantité :</strong> {{ produit.quantite }}</p>
     <p><strong>Prix :</strong> {{ produit.prix }}</p>
     <p><strong>Description :</strong> {{ produit.description }}</p>
-    <p><strong>Date :</strong> {{ produit.date }}</p>
+    <p><strong>Date :</strong> {{formatDate(produit.date) }}</p>
     <p><strong>Stock :</strong> {{ produit.stock }}</p> <!-- Ajout du stock -->
     <p><strong>Utilisateur :</strong> {{ utilisateurNom }}</p>
 
@@ -20,11 +20,15 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useProduitStore } from '@stores/produitStore';
-
+import moment from 'moment';
 const route = useRoute();
 const store = useProduitStore();
 const produit = ref(null);
 const utilisateurNom = ref('');
+
+const formatDate = (date) => {
+  return moment(date).format("DD/MM/YYYY"); // Format date to DD/MM/YYYY
+};
 
 onMounted(async () => {
   const id = route.params.id;

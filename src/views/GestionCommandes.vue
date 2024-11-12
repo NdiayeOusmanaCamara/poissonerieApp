@@ -3,14 +3,14 @@
     <div class="top-bar">
       <h2>Liste des commandes</h2>
       <router-link class="btn btn-success create-commande" to="/dashboard/commandes/ajouter">
-        <i class="fas fa-plus-circle"></i> Ajouter une commande
+       <i class="fas fa-plus-circle"></i> Ajouter une commande
       </router-link>
     </div>
 
     <!-- Add a search input for filtering orders -->
-    <input v-model="nom" type="text" placeholder="Rechercher par nom..." class="form-control mb-4"/>
+    <!-- <input v-model="nom" type="text" placeholder="Rechercher par nom..." class="form-control mb-4"/> -->
 
-    <table class="table table-striped table-bordered mt-4 mb-4">
+    <table class="commande-table">
       <thead>
         <tr>
           <th scope="col">#</th>
@@ -30,7 +30,7 @@
           <td>{{ getUtilisateurNom(commande.utilisateurId) }}</td>
             <td class="text-center">
               <button
-                @click="deleteUtilisateur(utilisateur.id)"
+                @click="deleteCommande(commande.id)"
                 class="btn btn-danger btn-sm me-2"
               >
                 <svg
@@ -46,9 +46,18 @@
                   />
                 </svg>
               </button>
+              <button @click="editCommande(commande)" class="btn btn-warning btn-sm me-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                  class="bi bi-pencil-square" viewBox="0 0 16 16">
+                  <path
+                    d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                  <path fill-rule="evenodd"
+                    d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
+                </svg>
+              </button>
              
               <button
-                @click="viewUtilisateur(utilisateur)"
+                @click="viewCommande(commande)"
                 class="btn btn-info btn-sm me-2"
               >
                 <svg
@@ -88,11 +97,7 @@ const produits = ref([]);
 const selectionCommande = ref(null);
 const nom = ref('');  // Define the 'nom' variable for filtering
 
-onMounted(() => {
-  store.loadDataFromApi(); // Load orders
-  loadUtilisateurs();
-  loadProduits();
-});
+
 
 const loadUtilisateurs = async () => {
   utilisateurs.value = await store.loadUtilisateurs();
@@ -124,6 +129,14 @@ const deleteCommande = (id) => {
     store.deleteCommande(id);
   }
 };
+const editCommande = (paiement) => {
+  router.push({ name: "modifier-commande", params: { id: paiement.id } });
+};
+
+const viewCommande = (commande) => {
+  router.push({ name: "detail-commande", params: { id: commande.id } });
+};
+
 
 const openModal = (commande) => {
   selectionCommande.value = commande;
@@ -134,6 +147,11 @@ const openModal = (commande) => {
 const formatDate = (date) => {
   return moment(date).format('DD/MM/YYYY');
 };
+onMounted(async() => {
+  await store.loadDataFromApi(); // Load orders
+  await loadUtilisateurs();
+  await loadProduits();
+});
 </script>
 
 
@@ -186,14 +204,14 @@ h2 {
 }
 
 .commande-table th {
-    background-color: #f9f9f9;
-    color: #666;
-    font-weight: bold;
+  background-color: #f9f9f9;
+  color: #090909;
+  font-weight: bold;
 }
 
 .commande-table td {
-    border-bottom: 1px solid #e3e3e3;
-    color: #333;
+  border-bottom: 1px solid #e3e3e3;
+  color: #090909;
 }
 
 .commande-table tbody tr:hover {

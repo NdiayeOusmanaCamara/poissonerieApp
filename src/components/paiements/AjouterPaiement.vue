@@ -10,7 +10,8 @@
                     </div>
                     <div class="form-group w-100">
                         <label for="montant">Montant</label>
-                        <input type="number" id="montant" v-model="form.montant" class="form-control" placeholder="Entrez le montant" step="0.01" required />
+                        <input type="number" id="montant" v-model="form.montant" class="form-control"
+                            placeholder="Entrez le montant" step="0.01" required />
                     </div>
                 </div>
                 <div class="d-flex justify-content-between gap-3">
@@ -76,11 +77,12 @@ const submitForm = () => {
     // Affiche les données du formulaire pour vérifier
     console.log("Données du formulaire avant soumission :", form);
 
-    store.addPaiement({ 
-        date: form.date, 
-        montant: form.montant, 
-        mode_paiement: form.mode_paiement, 
-        commandeId: form.commandeId 
+    store.addPaiement({
+        date: form.date,
+        montant: form.montant,
+        mode_paiement: form.mode_paiement,
+        commandeId: form.commandeId,
+        utilisateurId: form.commandeId,
     });
 
     // Redirection après soumission

@@ -124,14 +124,14 @@ const deletePaiement = (id) => {
 };
 
 // Fonction pour éditer un paiement
-const editPaiement = (paiement) => {
+function editPaiement(paiement) {
   router.push({ name: "modifier-paiement", params: { id: paiement.id } });
-};
+}
 
 // Fonction pour visualiser un paiement
-const viewPaiement = (paiement) => {
-  router.push({ name: "detail-paiement", params: { id: paiement.id } });
-};
+function viewPaiement(paiement) {
+router.push({ name: "detail-paiement", params: { id: paiement.id } });
+}
 </script>
 
 <style scoped>
@@ -150,7 +150,7 @@ const viewPaiement = (paiement) => {
 
 h2 {
   font-size: 24px;
-  color: #4a4a4a;
+  color: #090909;
 }
 
 .create-paiement {
@@ -184,13 +184,13 @@ h2 {
 
 .paiement-table th {
   background-color: #f9f9f9;
-  color: #666;
+  color: black;
   font-weight: bold;
 }
 
 .paiement-table td {
   border-bottom: 1px solid #e3e3e3;
-  color: #333;
+    color: #090909;
 }
 
 .paiement-table tbody tr:hover {

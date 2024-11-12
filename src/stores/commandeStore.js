@@ -12,37 +12,54 @@ export const useCommandeStore = defineStore('commandes', {
     // Charger toutes les commandes depuis l'API
     async loadDataFromApi() {
       try {
-        const resp = await axios.get("http://localhost:3000/commandes");
+        const token = localStorage.getItem('jwtToken');
+        const resp = await axios.get('http://localhost:3000/commandes', {
+          headers: {
+            Authorization: `Bearer ${token}` // Ajouter le token à l'en-tête
+          }
+        });
         this.commandes = resp.data;
       } catch (error) {
-        console.error("Erreur lors du chargement des commandes :", error);
-      }
-    },
-
-    // Charger tous les produits depuis l'API
-    async loadProduits() {
-      try {
-        const resp = await axios.get("http://localhost:3000/produits");
-        this.produits = resp.data;
-        return this.produits;
-      } catch (error) {
-        console.error("Erreur lors du chargement des produits :", error);
-        return [];
-      }
-    },
-
-    // Charger tous les utilisateurs depuis l'API
+        console.error('Erreur lors du chargement des commandes :', error.response || error.message);
+        this.inventaires = [];
+    }
+  },
+      // Charger tous les utilisateurs depuis l'API
     async loadUtilisateurs() {
       try {
-        const resp = await axios.get("http://localhost:3000/utilisateurs");
+        const token = localStorage.getItem('jwtToken');
+        const resp = await axios.get('http://localhost:3000/utilisateurs', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
         this.utilisateurs = resp.data;
         return this.utilisateurs;
       } catch (error) {
-        console.error("Erreur lors du chargement des utilisateurs :", error);
+        console.error('Erreur lors du chargement des utilisateurs :', error.response || error.message);
+        return [];
+      }
+    },
+    
+    // Charger tous les produits depuis l'API
+    async loadProduits() {
+      try {
+        const token = localStorage.getItem('jwtToken');
+        const resp = await axios.get('http://localhost:3000/produits', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        this.produits = resp.data;
+        return this.produits;
+      } catch (error) {
+        console.error('Erreur lors du chargement des produits :', error.response || error.message);
         return [];
       }
     },
 
+
+    
     // Ajouter une nouvelle commande
     async addCommande(newCommande) {
       try {

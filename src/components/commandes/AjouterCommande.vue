@@ -24,16 +24,17 @@
       <!-- Utilisateur et Statut -->
       <div class="d-flex justify-content-between gap-3 mt-3">
         <div class="form-group w-100">
-          <label for="utilisateur" class="form-label">Utilisateur</label>
           <select id="utilisateur" v-model="form.utilisateurId" class="form-control" required>
+            <option v-if="!utilisateurs.length" disabled>Chargement des utilisateurs...</option>
             <option v-for="utilisateur in utilisateurs" :key="utilisateur.id" :value="utilisateur.id">
               {{ utilisateur.nom }}
             </option>
           </select>
+          
         </div>
         <div class="form-group w-100">
-          <label for="statut" class="form-label">Statut de la commande</label>
-          <input type="text" id="statut" v-model="form.statut" class="form-control" required />
+          <label for="prix" class="form-label">Prix</label>
+          <input type="number" id="prix" v-model="form.prix" class="form-control" required />
         </div>
       </div>
 
@@ -130,9 +131,17 @@ const handleSubmit = async () => {
 
 // Charger les utilisateurs et produits lors du montage
 onMounted(async () => {
-  utilisateurs.value = await utilisateurStore.loadUtilisateurs();
-  produits.value = await produitStore.loadProduits();
+  try {
+    utilisateurs.value = await utilisateurStore.loadUtilisateurs();
+    produits.value = await produitStore.loadProduits();
+
+    console.log("Utilisateurs :", utilisateurs.value);
+    console.log("Produits :", produits.value);
+  } catch (error) {
+    console.error("Erreur lors du chargement des données :", error);
+  }
 });
+
 </script>
 
 

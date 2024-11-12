@@ -4,7 +4,7 @@
   
       <p><strong>ID :</strong> {{ vente.id }}</p>
       <p><strong>Montant  :</strong> {{ vente.montant }}</p>
-      <p><strong>Date :</strong> {{ vente.date }}</p>
+      <p><strong>Date :</strong> {{formatDate(vente.date) }}</p>
       <p><strong>Utilisateur :</strong> {{ utilisateurNom }}</p>
   
       <router-link to="/dashboard/ventes" class="btn btn-primary">Retour à la liste</router-link>
@@ -17,12 +17,15 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useVenteStore } from '@stores/venteStore';
-
+import moment from 'moment';
 const route = useRoute();
 const store = useVenteStore();
 const vente = ref(null);
 const utilisateurNom = ref('');
 
+const formatDate = (date) => {
+  return moment(date).format("DD/MM/YYYY"); // Format date to DD/MM/YYYY
+};
 onMounted(async () => {
   const id = route.params.id;
   await store.loadDataFromApi(); // Assure que les données sont chargées
@@ -35,6 +38,7 @@ onMounted(async () => {
     utilisateurNom.value = utilisateur ? utilisateur.nom : 'Utilisateur inconnu';
   }
 });
+
 </script>
 
 <style scoped>

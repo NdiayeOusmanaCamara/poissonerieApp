@@ -1,9 +1,9 @@
 <template>
     <div v-if="inventaire" class="commande-detail">
         <h2>Détails inventaire</h2>
-
-        <p><strong>Quantite :</strong> {{ inventaire.id }}</p>
-        <p><strong>Type :</strong> {{ inventaire.nom }}</p>
+        <p><strong>ID :</strong> {{ inventaire.id }}</p>
+        <p><strong>Quantite :</strong> {{ inventaire.quantite }}</p>
+        <p><strong>Type :</strong> {{ inventaire.type }}</p>
         <p><strong>Produit :</strong> {{ produitNom }}</p>
         <p><strong>Utilisateur :</strong> {{ utilisateurNom }}</p>
     
@@ -31,11 +31,11 @@ onMounted(async () => {
 
   if (inventaire.value) {
     const produits = await store.loadProduits();
-    const produit = produits.find(l => l.id === produit.value.produitId);
+    const produit = produits.find(p => p.id === inventaire.value.produitId);
 produitNom.value = produit ? produit.nom : 'produit inconnu';
   
   const utilisateurs = await store.loadUtilisateurs();
-    const utilisateur = utilisateurs.find(u => u.id === commande.value.utilisateurId);
+    const utilisateur = utilisateurs.find(u => u.id === inventaire.value.utilisateurId);
     utilisateurNom.value = utilisateur ? utilisateur.nom : 'Utilisateur inconnu';
   }
 });

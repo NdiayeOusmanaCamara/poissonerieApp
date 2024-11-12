@@ -20,7 +20,7 @@
             <tbody>
                 <tr v-for="(vente) in filteredVentes" :key="vente.id">
                     <th scope="row">{{ vente.id }}</th>
-                    <td>{{ vente.date }}</td>
+                    <td>{{ formatDate(vente.date) }}</td> 
                     <td>{{ vente.montant}} </td>
                     <td>{{ getUtilisateurNom( vente.utilisateurId) }}</td>
                     <td class="text-center">
@@ -73,7 +73,12 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useVenteStore } from "@stores/venteStore";
+import moment from "moment";
 
+
+const formatDate = (date) => {
+  return moment(date).format('DD/MM/YYYY');
+};
 const date = ref('');
 const store = useVenteStore();
 const router = useRouter();
@@ -125,8 +130,8 @@ function viewVente(vente) {
 }
 
 h2 {
-    font-size: 24px;
-    color: #4a4a4a;
+  font-size: 24px;
+  color: #090909;
 }
 
 .create-commande {
@@ -159,14 +164,14 @@ h2 {
 }
 
 .commande-table th {
-    background-color: #f9f9f9;
-    color: #666;
-    font-weight: bold;
+  background-color: #f9f9f9;
+  color: #090909;
+  font-weight: bold;
 }
 
 .commande-table td {
-    border-bottom: 1px solid #e3e3e3;
-    color: #333;
+  border-bottom: 1px solid #e3e3e3;
+    color: #090909;
 }
 
 .commande-table tbody tr:hover {
