@@ -1,7 +1,7 @@
 
 
-# Application de gestion commercial pour les poissoneries
-
+# Application de Gestion Commerciale pour les Poissonneries
+Cette application est conçue pour aider les poissonneries à gérer leurs opérations commerciales quotidiennes de manière efficace. Elle inclut des fonctionnalités telles que la gestion des commandes, des réceptions, des ventes, des utilisateurs, des produits, des paiements, des inventaires, des livraisons, ainsi que des mouvements de stock. Chaque fonctionnalité est pensée pour simplifier et automatiser les processus de gestion afin de maximiser la productivité et l'exactitude des opérations.
 
 # Fonctionnalités
 ## Gestion de l'authentification et de la sécurité
