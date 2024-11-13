@@ -17,7 +17,7 @@ export const useUserStore = defineStore("utilisateurs", {
     },
     async loadUtilisateurs() {
       try {
-        const response = await fetch("http://localhost:3000/utilisateurs"); // Remplace par ton URL d'API ou autre source de données
+        const response = await fetch("http://localhost:3000/utilisateurs");
         this.utilisateurs = await response.json();
       } catch (error) {
         console.error('Erreur lors du chargement des utilisateurs :', error);
@@ -93,6 +93,14 @@ export const useUserStore = defineStore("utilisateurs", {
       this.tokenUtilisateurActif = null;
       localStorage.removeItem("token");  // Supprimer le token de localStorage
       delete axios.defaults.headers['Authorization'];  // Supprimer l'en-tête Authorization
+    }
+  },
+  async loadProduits() {
+    try {
+      const response = await fetch("http://localhost:3000/produits");
+      this.produits = await response.json();
+    } catch (error) {
+      console.error('Erreur lors du chargement des produits :', error);
     }
   },
 });

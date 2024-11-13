@@ -1,5 +1,7 @@
 import { defineStore } from "pinia";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
@@ -21,10 +23,12 @@ export const useAuthStore = defineStore("auth", {
         // Ajout de l'authentification dans les headers d'axios
         axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
       } catch (error) {
-        this.isAuthenticated = false;
-        this.token = null;
-        this.user = null;
-        throw new Error(error.response?.data?.error || 'Login failed');
+        // Gestion spécifique des erreurs d'authentification
+        if (error.response?.status === 401) {
+          throw new Error('Email ou mot de passe incorrect.');
+        } else {
+          throw new Error(error.response?.data?.error || 'Erreur lors de l\'authentification.');
+        }
       }
     },
 
@@ -38,10 +42,22 @@ export const useAuthStore = defineStore("auth", {
 
     checkAuth() {
       const token = localStorage.getItem("authToken");
+
       if (token) {
-        this.isAuthenticated = true;
-        this.token = token;
-        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        // Décoder le token pour vérifier s'il est expiré
+        const decodedToken = jwtDecode(token);
+        const currentTime = Date.now() / 1000; // Convertir le temps en secondes
+
+        if (decodedToken.exp > currentTime) {
+          // Le token est valide, connecter l'utilisateur
+          this.isAuthenticated = true;
+          this.token = token;
+          this.user = decodedToken;  // Si tu stockes des informations utilisateur dans le token
+          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        } else {
+          // Le token est expiré, déconnecter l'utilisateur
+          this.logout();
+        }
       } else {
         this.isAuthenticated = false;
       }
