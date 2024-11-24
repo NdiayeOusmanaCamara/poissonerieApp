@@ -52,7 +52,7 @@
           
         </li>
         <li class="nav-item">
-          <router-link to="/dashboard/mouvements" class="nav-link" active-class="active">
+          <router-link to="/dashboard/receptions" class="nav-link" active-class="active">
             <i class="fas fa-receipt"></i>
             Receptions
           </router-link>

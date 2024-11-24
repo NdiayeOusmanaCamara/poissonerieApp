@@ -1,119 +1,148 @@
 <template>
-    <div class="commande-detail">
-        <div class="form-content">
-            <h2 class="text-center mb-4">Ajouter un inventaire</h2>
-            <form @submit.prevent="submitForm">
-                <div class="form-group">
-                    <label for="quantite" class="form-label">Quantité</label>
-                    <input type="number" id="quantite" v-model="form.quantite" class="form-control" placeholder="Entrez la quantité" required />
-                </div>
-                <div class="form-group">
-                    <label for="date" class="form-label">Date</label>
-                    <input type="date" id="date" v-model="form.date" class="form-control" placeholder="Entrez la quantité" required />
-                </div>
-                <div class="form-group">
-                    <label for="type" class="form-label">Type</label>
-                    <select id="type" v-model="form.type" class="form-control" required>
+  <div class="form-container d-flex align-items-center">
+    <div class="form-content">
+      <router-link to="/dashboard/inventaires" class="btn btn-secondary mb-3">
+        <i class="fas fa-arrow-left"></i>
+      </router-link>
+      <form @submit.prevent="addInventaire" class="p-4 shadow-sm bg-white rounded">
+        <h2 class="text-center mb-4">Ajouter un inventaire</h2>
 
-                        <option value="Entrée">Entrée</option>
-                        <option value="Sortie">Sortie</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="produit">Produit</label>
-                    <select id="produit" v-model="form.produitId" class="form-control" required>
-                        <option v-for="produit in produits" :key="produit.id" :value="produit.id">
-                            {{ produit.nom }}
-                        </option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="utilisateur">Utilisateur</label>
-                    <select id="utilisateur" v-model="form.utilisateurId" class="form-control" required>
-                        <option v-for="utilisateur in utilisateurs" :key="utilisateur.id" :value="utilisateur.id">
-                            {{ utilisateur.nom }}
-                        </option>
-                    </select>
-                </div>
-        
-                <div class=" d-flex justify-content-end gap-5">
-                    <router-link to="/dashboard/inventaires" class="btn btn-primary mt-3">Retour à la liste</router-link>
-                    <button type="submit" class="btn btn-success">Ajouter</button>
-                </div>
-                </form>
+        <div class="d-flex justify-content-between gap-4">
+          <!-- Stock Input -->
+          <div class="form-group mb-3 w-100">
+            <label for="stock">Stock</label>
+            <input type="number" id="stock" v-model="stock" class="form-control" required />
+            <small v-if="errors.stock" class="text-danger">{{ errors.stock }}</small>
+          </div>
+
+          <!-- Produit Selection by Name -->
+          <div class="form-group mb-3 w-100">
+            <label for="produit">Produit</label>
+            <select id="produit" v-model="produitId" class="form-control" required>
+              <option disabled value="">Sélectionnez un produit</option>
+              <option v-for="produit in produits" :key="produit.id" :value="produit.id">
+                {{ produit.nom }}
+              </option>
+            </select>
+            <small v-if="errors.produitId" class="text-danger">{{ errors.produitId }}</small>
+          </div>
         </div>
+
+        <div class="d-flex justify-content-between gap-4">
+          <!-- Date Input -->
+          <div class="form-group mb-4 w-100">
+            <label for="date">Date</label>
+            <input type="date" id="date" v-model="date" class="form-control" required />
+            <small v-if="errors.date" class="text-danger">{{ errors.date }}</small>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-5">
+          <button type="submit" class="btn btn-success mt-5 w-100">Ajouter Inventaire</button>
+        </div>
+      </form>
     </div>
+  </div>
 </template>
 
+  
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useInventaireStore } from '@stores/inventaireStore';
+import { useProduitStore } from '@stores/produitStore'; // Assurez-vous que vous avez un store pour les produits
+import { useToast } from 'vue-toastification';
 
+const route = useRouter();
+const inventaireStore = useInventaireStore();
+const produitStore = useProduitStore();
+const toast = useToast();
 
-const router = useRouter();
-const store = useInventaireStore();
-const form = reactive({
-    quantite: '',
-    type: '',
-    date: '',
-    produitId: null,
-    utilisateurId: null
-});
+// Form data
+const stock = ref('');
+const produitId = ref('');
+const date = ref('');
+
+// Products list
 const produits = ref([]);
-const utilisateurs = ref([])
 
+// Errors object to handle validation messages
+const errors = ref({});
+
+// Fetch products when the component is mounted
 onMounted(async () => {
-    produits.value = await store.loadProduits();
+  try {
+    produits.value = await produitStore.loadProduitsData(); // Fetch products from store or API
+  } catch (error) {
+    toast.error("Erreur lors du chargement des produits.");
+  }
 });
-onMounted(async () => {
-    utilisateurs.value = await store.loadUtilisateurs();
-});
-const submitForm = async () => {
-    try {
-      await store.addInventaire(form);  // Appel correct à la méthode d'ajout de produit
-      await store.loadDataFromApi();  // Recharger la liste des produits après l'ajout
-      router.push('/dashboard/inventaires');  // Rediriger vers la liste des produits
-    } catch (error) {
-      console.error("Erreur lors de l'ajout du inventaires :", error);
+
+// Function to handle form submission
+const addInventaire = async () => {
+  errors.value = {}; // Reset errors
+  try {
+    await inventaireStore.addInventaire({
+      stock: stock.value,
+      produitId: produitId.value,
+      date: date.value,
+    });
+    toast.success('Inventaire ajouté avec succès !');
+    route.push("/dashboard/inventaires");
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.errors) {
+      error.response.data.errors.forEach(err => {
+        errors.value[err.path] = err.msg;
+      });
+    } else {
+      toast.error("Une erreur est survenue lors de l'ajout.");
     }
-  };
-
+  }
+};
 </script>
 
-
-<style scoped>
-.commande-detail {
+  
+  <style scoped>
+  .form-container {
     max-width: 800px;
     margin: 50px auto;
     padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .form-content {
+    flex: 1;
+  }
+  
+  .form-control {
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    transition: border-color 0.3s ease;
+  }
+  
+  .form-control:focus {
+    border-color: #007bff;
+    box-shadow: none;
+  }
+  
+  h2 {
+    color: #343a40;
+    font-weight: bold;
+  }
+  
+  .shadow-sm {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .bg-white {
     background-color: white;
+  }
+  
+  .rounded {
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-h2 {
-    margin-bottom: 20px;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-control {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-}
-
-button {
-    margin-top: 20px;
-}
-
-.btn-primary {
-    display: inline-block;
-    padding: 10px 20px;
-    text-decoration: none;
-}
-</style>
-
+  }
+  </style>
+  

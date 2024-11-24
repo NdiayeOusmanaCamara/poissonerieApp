@@ -10,25 +10,23 @@
         <table class="inventaire-table">
             <thead>
                 <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Quantité</th>
-                    <th scope="col">Type</th>
+                    <th scope="col">ID</th>
+                    <th scope="col">Stock</th>
                     <th scope="col">Date</th>
                     <th scope="col">Produit</th>
-                    <th scope="col">Utilisateur</th>
-                    <th class="text-center">Actions</th>
+                    <!-- <th scope="col">Utilisateur</th> -->
+                    <th class="text">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="(inventaire) in store.inventaires" :key="inventaire.id">
-                    <th scope="row">{{ inventaire.id }}</th>
-                    <td>{{ inventaire.quantite }}</td>
-                    <td>{{ inventaire.type }}</td>
-                    <td>{{ inventaire.date }}</td>
-                    <td>{{ getProduitNom(inventaire.produitId) }}</td>
-                    <td>{{ getUtilisateurNom(inventaire.utilisateurId) }}</td>
-                    <td class="text-center d-flex">
-                        <button @click="deleteInventaire(inventaire.id)" class="btn btn-danger btn-sm me-2">
+                    <td>{{ inventaire.id }}</td>
+                    <td>{{ inventaire.stock }}</td>
+                    <td>{{ formatDate (inventaire.date) }}</td>
+                    <td>{{getProduitName (inventaire.produitId) }}</td>
+                    <!-- <td>{{ getUtilisateurNom(inventaire.utilisateurId) }}</td> -->
+                    <td class="text-center d-flex ">
+                        <button @click="confirmRemoveInventaire(inventaire.id)" class="btn btn-danger btn-sm me-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                 class="bi bi-trash3" viewBox="0 0 16 16">
                                 <path
@@ -56,48 +54,78 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useInventaireStore } from '@stores/inventaireStore';
-
+import { useInventaireStore } from '@/stores/inventaireStore';
+import moment from 'moment';
 const store = useInventaireStore();
 const router = useRouter();
+const inventaires = ref([]);
 const utilisateurs = ref([]);
 const produits = ref([]);
+import Swal from 'sweetalert2';
 
-const loadUtilisateurs = async () => {
-  utilisateurs.value = await store.loadUtilisateurs();
+
+
+const formatDate = (date) => {
+  return moment(date).format('YYYY-MM-DD');
 };
 
-const loadProduits = async () => {
-  produits.value = await store.loadProduits();
+onMounted(async () => {
+    try {
+    await store.loadProduitsData();
+    produits.value = store.produits;
+        await store.loadDataFromApi();
+        inventaires.value = store.inventaires;
+       
+    } catch (error) {
+        console.error("Erreur lors du chargement des inventaires :", error.message);
+        toast.error("Une erreur est survenue lors du chargement des inventaires.");
+    }
+});
+const getProduitName = (produitId) => {
+    const produit = produits.value.find((p) => p.id === produitId);
+    return produit ? produit.nom : 'produit non trouve'
+}
+
+
+
+const toast = {
+    success: (message) => {
+        alert(`Succès : ${message}`);
+    },
+    error: (message) => {
+        alert(`Erreur : ${message}`);
+    }
 };
 
-const getUtilisateurNom = (utilisateurId) => {
-  const utilisateur = utilisateurs.value.find((u) => u.id === utilisateurId);
-  return utilisateur ? utilisateur.nom : 'Utilisateur non trouvé';
-};
-
-const getProduitNom = (produitId) => {
-  const produit = produits.value.find((p) => p.id === produitId);
-  return produit ? produit.nom : 'Produit non trouvé';
-};
-
-const deleteInventaire = (id) => {
-  const confirmation = window.confirm("Êtes-vous sûr de vouloir supprimer cet inventaire ?");
-  if (confirmation) {
-    store.deleteInventaire(id);
-  }
+const confirmRemoveInventaire = async (id) => {
+    const result = await Swal.fire({
+        title: 'Êtes-vous sûr ?',
+        text: 'Voulez-vous vraiment supprimer cette inventaire ?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Oui, supprimer',
+        cancelButtonText: 'Annuler'
+    });
+    if (result.isConfirmed) {
+        try {
+            await store.removeInventaire(id);
+            toast.success('Inventaire supprimée avec succès !');
+            await store.loadDataFromApi();
+            inventaires.value = store.inventaires;
+        } catch (error) {
+            console.error("Erreur lors de la suppression :", error.message);
+            toast.error('Une erreur est survenue lors de la suppression.');
+        }
+    }
 };
 
 const viewInventaire = (inventaire) => {
   router.push({ name: 'detail-inventaire', params: { id: inventaire.id } });
 };
-
-onMounted(async () => {
-  await store.loadDataFromApi();
-  await loadUtilisateurs();
-  await loadProduits();
-});
 </script>
+
 
 <style scoped>
 .commande-management {
@@ -146,7 +174,8 @@ h2 {
 .inventaire-table th {
     background-color: #f9f9f9;
     color: #090909;
-    font-weight: bold;
+   
+    
 }
 
 .inventaire-table td {

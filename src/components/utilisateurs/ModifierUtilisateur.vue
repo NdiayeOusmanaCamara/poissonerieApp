@@ -1,125 +1,138 @@
 <template>
-  <div v-if="utilisateur" class="commande-detail">
-    <h2>Modifier utilisateur </h2>
-          
-          <form @submit.prevent="submitForm">
-            <div class="form-group">
-                  <label for="nom">Nom</label>
-                  <input type="text" id="nom" v-model="form.nom" class="form-control" required />
+  <div class="form-container d-flex align-items-center">
+      <div class="form-content">
+          <router-link to="/dashboard/utilisateurs" class="btn btn-secondary mb-3">
+              <i class="fas fa-arrow-left"></i>
+          </router-link>
+
+          <form @submit.prevent="updateUser" class="p-4 shadow-sm bg-white rounded">
+              <h2 class="text-center mb-4">Modifier l'utilisateur</h2>
+              <div class="form-group mb-3">
+                  <label for="name" class="form-label">Nom</label>
+                  <input type="text" v-model="nom" class="form-control" placeholder="Entrez le nom" required />
+                <small v-if="errors.nom" class="text-danger">{{ errors.nom }}</small>  
               </div>
-              <div class="form-group">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" step="0.01" v-model="form.email" class="form-control" placeholder="Email" required />
-            </div>
-            <!-- <div class="form-group mb-4">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" v-model="password" class="form-control" placeholder="Password" required />
-            </div> -->
-              <div class="form-group">
-                  <label for="role">Role</label>
-                  <select id="role" v-model="form.role" class="form-control" required>
-                      <option value="GESTIONNAIRE">GESTIONNAIRE</option>
+              <div class="form-group mb-3">
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email" v-model="email" class="form-control" placeholder="Entrez l'adresse email"
+                      required />
+                  <small v-if="errors.email" class="text-danger">{{ errors.email }}</small>
+              </div>
+              <div class="form-group mb-4">
+                  <label for="role" class="form-label">Rôle</label>
+                  <select v-model="role" class="form-control" required>
                       <option value="ADMIN">ADMIN</option>
+                      <option value="GESTIONNAIRE">GESTIONNAIRE</option>
                   </select>
+                  <small v-if="errors.role" class="text-danger">{{ errors.role }}</small>
               </div>
-              <div class=" modal-footer d-flex justify-content-end gap-5">
-                <router-link  to="/dashboard/utilisateurs" class="btn btn-primary mt-3" >Retour à la liste </router-link>
-                <button type="submit" class="btn btn-success">Modifie</button>
-             
-            </div>
+              <button type="submit" class="btn btn-success w-100">Mettre à jour l'utilisateur</button>
           </form>
-         
       </div>
-    
+  </div>
 </template>
 
-<script setup>
-import { ref, reactive, onMounted, watch } from "vue";
-import { useRouter, useRoute } from "vue-router";
-import { useUserStore } from "@stores/utilisateurStore";
 
-const store = useUserStore();
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useUserStore } from '@stores/utilisateurStore';
+import { useToast } from 'vue-toastification';
+
+const userStore = useUserStore();
 const route = useRoute();
 const router = useRouter();
+const toast = useToast();
 
-const utilisateur = ref(null);
-const form = reactive({
-  nom: '',
-  email: '',
-  password: '',
-  role: 'GESTIONNAIRE', // valeur par défaut
+const nom = ref('');
+const email = ref('');
+const role = ref('GESTIONNAIRE');
+const errors = ref({});
+
+onMounted(() => {
+  const userId = route.params.id;
+  userStore.loadUserById(userId).then(() => {
+      nom.value = userStore.user.nom;
+      email.value = userStore.user.email;
+      role.value = userStore.user.role;
+  });
 });
 
-onMounted(async () => {
-  const id = route.params.id;
-  await store.loadDataFromApi();  // Remplacer par loadDataFromApi
-  utilisateur.value = store.getUtilisateur(parseInt(id));  // Utiliser getUtilisateur pour trouver l'utilisateur par ID
-  if (utilisateur.value) {
-    form.nom = utilisateur.value.nom;
-    form.email = utilisateur.value.email;
-    form.password = utilisateur.value.password;
-    form.role = utilisateur.value.role;
+const updateUser = async () => {
+  errors.value = {};
+  try {
+      const userId = route.params.id;
+      const updatedUser = {
+          nom: nom.value,
+          email: email.value,
+          role: role.value
+      };
+
+      await userStore.updateUser(userId, updatedUser);
+      toast.success('Utilisateur mis à jour avec succès !');
+      router.push('/dashboard/utilisateurs');
+  } catch (error) {
+      if (error.response && error.response.data && error.response.data.errors) {
+          error.response.data.errors.forEach(err => {
+              errors.value[err.path] = err.msg;
+          });
+      } else {
+          toast.error('Une erreur est survenue lors de la mise à jour.');
+      }
   }
-});
-
-
-// Utilisation de watch pour surveiller les changements dans `utilisateur`
-watch(utilisateur, (newValue) => {
-  if (newValue) {
-    form.nom = newValue.nom;
-    form.email = newValue.email;
-    form.password = newValue.password;
-    form.role = newValue.role;
-  }
-});
-
-async function submitForm() {
-  const updatedUtilisateur = {
-    ...utilisateur.value,
-    nom: form.nom,
-    email: form.email,
-    password: form.password,
-    role: form.role
-  };
-
-  await store.updatedUtilisateur(utilisateur.value.id, updatedUtilisateur);  // Utilisez 'updatedUtilisateur' ici
-  router.push('/dashboard/utilisateurs');
-}
-
+};
 </script>
 
 
+
+
 <style scoped>
-.commande-detail {
+.form-container {
   max-width: 800px;
   margin: 50px auto;
   padding: 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-h2 {
-  margin-bottom: 20px;
-}
 
-.form-group {
-  margin-bottom: 15px;
+
+.form-content {
+  flex: 1;
 }
 
 .form-control {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
+  padding: 10px 15px;
+  border-radius: 5px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.3s ease;
 }
 
-button {
-  margin-top: 20px;
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: none;
 }
 
-.btn-primary {
-  display: inline-block;
-  padding: 10px 20px;
-  text-decoration: none;
+
+.btn:hover {
+  background-color: #1abc9c;
+}
+
+h2 {
+  color: #343a40;
+  font-weight: bold;
+}
+
+.shadow-sm {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bg-white {
+  background-color: white;
+}
+
+.rounded {
+  border-radius: 8px;
 }
 </style>

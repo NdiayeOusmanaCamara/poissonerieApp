@@ -1,58 +1,94 @@
 <template>
-    <div v-if="utilisateur" class="commande-detail">
-      <h2>Détails de l'utilisateur</h2>
-      <p><strong>ID :</strong> {{ utilisateur.id }}</p>
-      <p><strong>Nom :</strong> {{ utilisateur.nom }}</p>
-      <p><strong>Email :</strong> {{ utilisateur.email }}</p>
-      <p><strong>Role :</strong> {{ utilisateur.role }}</p>
+  <div class="form-container d-flex align-items-center" v-if="userStore.user && userStore.user.nom">
+      <div class="form-content">
+          <router-link to="/dashboard/utilisateurs" class="btn btn-secondary mb-3">
+              <i class="fas fa-arrow-left"></i>
+          </router-link>
 
-      <router-link to="/dashboard/utilisateurs" class="btn btn-primary">Retour à la liste</router-link>
+          <form class="p-4 shadow-sm bg-white rounded">
+              <h2 class="text-center mb-4">Détails de l'utilisateur</h2>
+              <div class="form-group mb-3">
+                  <label for="name" class="form-label">Nom</label>
+                  <input type="text" v-model="userStore.user.nom" class="form-control" readonly />
+              </div>
+              <div class="form-group mb-3">
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email" v-model="userStore.user.email" class="form-control" readonly />
+              </div>
+              <div class="form-group mb-4">
+                  <label for="role" class="form-label">Rôle</label>
+                  <select v-model="userStore.user.role" class="form-control" disabled>
+                      <option value="ADMIN">ADMIN</option>
+                      <option value="GESTIONNAIRE">GESTIONNAIRE</option>
+                  </select>
+              </div>
+          </form>
+      </div>
   </div>
+  <p v-else>Chargement des détails de l'utilisateur...</p>
 </template>
 
-<script setup>
-import { ref, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useUserStore } from "@stores/utilisateurStore";
 
-const store = useUserStore();
+<script setup>
+import { onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { useUserStore } from '@stores/utilisateurStore';
+
+const userStore = useUserStore();
 const route = useRoute();
-const router = useRouter();
-const utilisateur = ref(null);
+
 
 onMounted(() => {
-  const id = parseInt(route.params.id);
-  utilisateur.value = store.getUtilisateur(id);
+  const userId = route.params.id;
+  userStore.loadUserById(userId);
 });
-
-function goBack() {
-  router.push({ name: "gestion-utilisateurs" });
-}
 </script>
 
 <style scoped>
-.commande-detail {
+.form-container {
   max-width: 800px;
   margin: 50px auto;
   padding: 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-content {
+  flex: 1;
+}
+
+.form-control {
+  padding: 10px 15px;
+  border-radius: 5px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: none;
+}
+
+
+.btn:hover {
+  background-color: #1abc9c;
 }
 
 h2 {
-  margin-bottom: 20px;
+  color: #343a40;
+  font-weight: bold;
 }
 
-p {
-  margin: 10px 0;
-  font-size: 18px;
+.shadow-sm {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.btn-primary {
-  margin-top: 20px;
-  display: inline-block;
-  padding: 10px 20px;
-  text-decoration: none;
+.bg-white {
+  background-color: white;
+}
+
+.rounded {
+  border-radius: 8px;
 }
 </style>

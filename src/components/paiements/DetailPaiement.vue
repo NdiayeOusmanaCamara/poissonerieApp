@@ -1,75 +1,116 @@
 <template>
-  <div v-if="commandeNom" class="commande-detail">
-    <h2>Détails de la paiement</h2>
-  
-    <p><strong>ID :</strong> {{ paiement.id }}</p>
-    <p><strong>Date :</strong> {{formatDate(paiement.date) }}</p>
-    <p><strong>Montant :</strong> {{ paiement.montant }}</p>
-    <p><strong>Mode Paiement :</strong> {{ paiement.mode_paiement }}</p>
-    <p><strong>Commande :</strong> {{ commandeNom }}</p>
-    <p><strong>Utilisateur :</strong> {{ utilisateurNom }}</p>
-  
-    <router-link to="/dashboard/paiements" class="btn btn-primary">Retour à la liste</router-link>
+  <div class="form-container d-flex align-items-center" v-if="paiementStore.paiement && paiementStore.paiement.id">
+    <div class="form-content">
+      <router-link to="/dashboard/paiements" class="btn btn-secondary mb-3">
+        <i class="fas fa-arrow-left"></i>
+      </router-link>
+      <form class="p-4 shadow-sm bg-white rounded">
+        <h2 class="text-center mb-4">Détails du Paiement</h2>
+        <div class="d-flex gap-2">
+          <div class="w-100">
+            <div class="form-group">
+              <label for="montant">Montant</label>
+              <input id="montant" v-model="paiementStore.paiement.montant" class="form-control" readonly />
+            </div>
+            <div class="form-group">
+              <label for="mode_paiement">Mode de Paiement</label>
+              <input id="mode_paiement" v-model="paiementStore.paiement.mode_paiement" class="form-control" readonly />
+            </div>
+          </div>
+        </div>
+
+        <!-- Commande -->
+        <div class="w-100">
+          <div class="form-group">
+            <label for="commandeNom">Commande</label>
+            <input id="commandeNom" v-model="commandeNom" class="form-control" readonly />
+          </div>
+        </div>
+
+        <!-- Date -->
+        <div class="w-100">
+          <div class="form-group">
+            <label for="date">Date du Paiement</label>
+            <input type="date" id="date" v-model="formattedDate" class="form-control" readonly />
+          </div>
+        </div>
+      </form>
+    </div>
   </div>
+  <p v-else>Chargement des détails du paiement...</p>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePaiementStore } from '@stores/paiementStore';
-import moment from "moment";
+import { useCommandeStore } from '@stores/commandeStore'; // Assuming you have a store for orders
+
+const formattedDate = computed(() => {
+  if (paiementStore.paiement && paiementStore.paiement.date) {
+    return new Date(paiementStore.paiement.date).toISOString().split('T')[0];
+  }
+  return '';
+});
+
+const paiementStore = usePaiementStore();
+const commandeStore = useCommandeStore(); // Store for orders
 const route = useRoute();
-const store = usePaiementStore();
-const paiement = ref(null);
-const commandeNom = ref('');
-const utilisateurNom = ref('');
+const commandeNom = ref(''); // To store the name of the commande
 
-
-const formatDate = (date) => {
-  return moment(date).format("DD/MM/YYYY"); // Format date to DD/MM/YYYY
-};
 onMounted(async () => {
-  const id = route.params.id;
-  await store.loadDataFromApi(); // Assure que les données sont chargées
-  paiement.value = store.paiements.find((p) => p.id === parseInt(id));
+  const paiementId = route.params.id;
+  await paiementStore.loadPaiementById(paiementId); // Charger les données de paiement
 
-  if (paiement.value) {
-    // Charger les commandes et trouver celle associée à cette commande
-    const commandes = await store.loadCommandes();
-    const commande = commandes.find(c => c.id === paiement.value.commandeId); // Corrected line
-    commandeNom.value = commande ? commande.nom : 'Commande inconnue';
-  
-    // Charger les utilisateurs et trouver l'utilisateur associé à la commande
-    const utilisateurs = await store.loadUtilisateurs();
-    const utilisateur = utilisateurs.find(u => u.id === paiement.value.utilisateurId); // Corrected line
-    utilisateurNom.value = utilisateur ? utilisateur.nom : 'Utilisateur inconnu';
+  // Charger les informations de la commande en utilisant l'ID de la commande
+  const commandeId = paiementStore.paiement.commandeId;
+  if (commandeId) {
+    const commande = await commandeStore.getCommandeById(commandeId);
+    commandeNom.value = commande.nom; // Assurez-vous que la commande contient un champ 'name'
   }
 });
 </script>
 
 <style scoped>
-.commande-detail {
+.form-container {
   max-width: 800px;
   margin: 50px auto;
   padding: 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-content {
+  flex: 1;
+}
+
+.form-control {
+  padding: 10px 15px;
+  border-radius: 5px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: none;
 }
 
 h2 {
-  margin-bottom: 20px;
+  color: #343a40;
+  font-weight: bold;
 }
 
-p {
-  margin: 10px 0;
-  font-size: 18px;
+.shadow-sm {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.btn-primary {
-  margin-top: 20px;
-  display: inline-block;
-  padding: 10px 20px;
-  text-decoration: none;
+.bg-white {
+  background-color: white;
+}
+
+.rounded {
+  border-radius: 8px;
 }
 </style>

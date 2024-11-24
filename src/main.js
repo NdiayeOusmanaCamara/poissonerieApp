@@ -10,6 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { faUserSecret } from "@fortawesome/free-solid-svg-icons";
 import "@fortawesome/fontawesome-free/css/all.css";
 
+
 library.add(faUserSecret);
 
 const app = createApp(App);

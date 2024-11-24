@@ -1,144 +1,169 @@
 <template>
-  <div class="commande-detail">
+  <div class="form-container d-flex align-items-center">
     <div class="form-content">
-      <h2 class="text-center mb-4">Modifier un paiement</h2>
-      <form @submit.prevent="submitForm">
-        <div class="d-flex justify-content-between gap-3">
-          <div class="form-group w-100">
-            <label for="date" class="form-label">Date</label>
-            <input type="date" id="date" v-model="form.date" class="form-control" required />
-          </div>
-          <div class="form-group w-100">
-            <label for="montant" class="form-label">Montant</label>
-            <input type="number" id="montant" v-model="form.montant" class="form-control"
-              placeholder="Entrez le montant" step="0.01" required />
-          </div>
-        </div>
-        <div class="d-flex justify-content-between gap-3">
-          <div class="form-group w-100">
-            <label for="mode_paiement" class="form-label">Mode de paiement</label>
-            <select id="mode_paiement" v-model="form.mode_paiement" class="form-control" required>
-              <option value="CREDIT_CARD">Carte de crédit</option>
-              <option value="DEBIT_CARD">Carte de débit</option>
-              <option value="PAYPAL">PayPal</option>
-              <option value="BANK_TRANSFER">Virement bancaire</option>
-            </select>
+      <router-link to="/dashboard/paiements" class="btn btn-secondary mb-3">
+        <i class="fas fa-arrow-left"></i>
+      </router-link>
+      <div class="paiement-detail">
+        <form @submit.prevent="submitForm" class="p-4 shadow-sm bg-white rounded">
+          <h2 class="text-center mb-4">Modifier un Paiement</h2>
+          <div class="d-flex gap-3">
+            <div class="w-100">
+              <div class="form-group">
+                <label for="montant">Montant</label>
+                <input type="number" id="montant" v-model="form.montant" class="form-control" required />
+                <small v-if="errors.montant" class="text-danger">{{ errors.montant }}</small>
+
+              </div>
+            </div>
+
+            <div class="w-100">
+              <div class="form-group">
+                <label for="mode_paiement">Mode de Paiement</label>
+                <input type="text" id="mode_paiement" v-model="form.mode_paiement" class="form-control" required />
+              </div>
+            </div>
           </div>
 
-          <div class="form-group w-100">
-            <label for="commande" class="form-label">Commande</label>
-            <input type="text" id="commande" v-model="commandeNom" class="form-control" disabled />
+          <div class="d-flex gap-3">
+            <div class="w-100">
+              <div class="form-group">
+                <label for="commandeId">Commande</label>
+                <select id="commandeId" v-model="form.commandeId" class="form-control" required>
+                  <option v-for="commande in commandes" :key="commande.id" :value="commande.id">
+                    {{ commande.nom }} <!-- Show command name here -->
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="w-100">
+              <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" v-model="form.date" class="form-control" required />
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="form-group w-100">
-          <label for="utilisateur" class="form-label">Utilisateur</label>
-          <input type="text" id="utilisateur" v-model="utilisateurNom" class="form-control" disabled />
-        </div>
-        <div class="modal-footer d-flex justify-content-end gap-5">
-          <router-link class="btn btn-primary mt-3" to="/dashboard/paiements">Retour à la liste</router-link>
-          <button type="submit" class="btn btn-success">Modifier</button>
-        </div>
-      </form>
+
+          <button type="submit" class="btn btn-success mt-5 w-100">Mettre à jour le Paiement</button>
+        </form>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { usePaiementStore } from '@stores/paiementStore';
-import { ref, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { ref, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { usePaiementStore } from "@stores/paiementStore"; // Assuming there's a store for Paiements
+import { useCommandeStore } from "@stores/commandeStore"; // Assuming there's a store for Commandes
 
+const store = usePaiementStore();
+const commandeStore = useCommandeStore(); // New store for commandes
 const route = useRoute();
 const router = useRouter();
-const store = usePaiementStore();
-const paiement = ref(null);
-const commandeNom = ref('');
-const utilisateurNom = ref('');
+
+const paiement = ref({});
 const form = ref({
-  date: '',
   montant: 0,
   mode_paiement: '',
-  utilisateurId: null,
-  commandeId: null,
+  commandeId: 0,
+  utilisateurId: 0,
+  date: '',
 });
+
+const commandes = ref([]); // To store fetched commandes
+const errors = ref({}); // To store errors
 
 onMounted(async () => {
   const id = route.params.id;
-  await store.loadDataFromApi(); // Assure que les données sont chargées
+  await store.loadPaiementById(id); // Load paiement details
   paiement.value = store.paiements.find((p) => p.id === parseInt(id));
 
   if (paiement.value) {
-    // Remplir les champs du formulaire avec les données de la commande actuelle
-    form.value.date = paiement.value.date;
     form.value.montant = paiement.value.montant;
     form.value.mode_paiement = paiement.value.mode_paiement;
     form.value.commandeId = paiement.value.commandeId;
     form.value.utilisateurId = paiement.value.utilisateurId;
-
-    const commande = store.commandes.find(c => c.id === paiement.value.commandeId);
-    commandeNom.value = commande ? commande.nom : '';
-
-    const utilisateur = store.utilisateurs.find(u => u.id === paiement.value.utilisateurId);
-    utilisateurNom.value = utilisateur ? utilisateur.nom : '';
+    form.value.date = paiement.value.date;
   }
+
+  // Fetch commandes to display in the dropdown
+  await commandeStore.fetchCommandes();
+  commandes.value = commandeStore.commandes; // Store the commandes in local state
 });
 
-// Fonction pour soumettre le formulaire
+const toast = {
+  success: (message) => {
+    alert(`Succès : ${message}`);
+  },
+  error: (message) => {
+    alert(`Erreur : ${message}`);
+  }
+};
+
 async function submitForm() {
-  // Vérifie si `form.value` existe
-  if (!form.value) {
-    console.error('Form data is missing!');
+  errors.value = {}; // Reset errors
+
+  // Validate montant (it must be positive)
+  if (form.value.montant <= 0) {
+    errors.value.montant = "Le montant doit être supérieur à zéro.";
     return;
   }
 
-  // Mettre à jour les données dans le store
   const updatedPaiement = {
     ...paiement.value,
-    date: form.value.date,
     montant: form.value.montant,
     mode_paiement: form.value.mode_paiement,
+    commandeId: form.value.commandeId, // Save the selected commande ID
     utilisateurId: form.value.utilisateurId,
-    commandeId: form.value.commandeId,
+    date: form.value.date,
   };
 
-  await store.updatedPaiement(paiement.value.id, updatedPaiement);
+  await store.updatePaiement(paiement.value.id, updatedPaiement); // Update the payment
 
-  // Rediriger l'utilisateur vers la liste après la modification
+  // Display success toast
+  toast.success('Paiement mis à jour avec succès!');
   router.push('/dashboard/paiements');
 }
+
 </script>
 
 <style scoped>
-.commande-detail {
+.form-container {
   max-width: 800px;
   margin: 50px auto;
   padding: 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-h2 {
-  margin-bottom: 20px;
-}
-
-.form-group {
-  margin-bottom: 15px;
+.form-content {
+  flex: 1;
 }
 
 .form-control {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
+  padding: 10px 15px;
+  border-radius: 5px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.3s ease;
 }
 
-button {
-  margin-top: 20px;
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: none;
 }
 
-.btn-primary {
-  display: inline-block;
-  padding: 10px 20px;
-  text-decoration: none;
+.shadow-sm {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bg-white {
+  background-color: white;
+}
+
+.rounded {
+  border-radius: 8px;
 }
 </style>

@@ -1,45 +1,65 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
+import { useAuthStore } from './authStore';
 
-export const useStockMovementStore = defineStore('stockMovements', {
+export const useMouvementStore = defineStore('mouvements', {
   state: () => ({
-    movements: [],
+    mouvements: [],
     produits: [],
     utilisateurs: [],
   }),
-  
   actions: {
+    // Load all movements from API
     async loadDataFromApi() {
+      const authStore = useAuthStore();
       try {
-        const response = await axios.get("http://localhost:3000/mouvements");
-        this.movements = response.data;
+        const resp = await axios.get('http://localhost:3000/movements', {
+          headers: {
+            Authorization: `Bearer ${authStore.token}`, // Adding token to header
+          },
+        });
+        this.mouvements = resp.data;
       } catch (error) {
-        console.error("Erreur lors du chargement des mouvements:", error);
-      }
-    },
-    
-    async loadUtilisateurs() {
-      try {
-        const response = await axios.get("http://localhost:3000/utilisateurs");
-        this.utilisateurs = response.data;
-        return this.utilisateurs;
-      } catch (error) {
-        console.error("Erreur lors du chargement des utilisateurs:", error);
-        return [];
-      }
-    },
-    
-    async deleteMovement(id) {
-      try {
-        await axios.delete(`http://localhost:3000/mouvements/${id}`);
-        this.movements = this.movements.filter(movement => movement.id !== id);
-      } catch (error) {
-        console.error("Erreur lors de la suppression du mouvement:", error);
+        console.error('Erreur lors du chargement des mouvements:', error.response || error.message);
+        this.mouvements = [];
       }
     },
 
-    async selectMovement(movement) {
-      // Logic to select movement for editing/viewing can be implemented here
+    // Load a specific movement by its ID
+    async loadMouvementById(id) {
+      const authStore = useAuthStore();
+      try {
+        const response = await axios.get(`http://localhost:3000/movements/${id}`, {
+          headers: {
+            Authorization: `Bearer ${authStore.token}`,
+          },
+        });
+        
+        this.mouvement = response.data;
+        return this.mouvement;
+      } catch (error) {
+        console.error('Erreur lors du chargement du mouvement:', error.message);
+        throw error;
+      }
     },
+    async loadProduitsData() {
+      try {
+        const auth = useAuthStore();
+        const resp = await axios.get('http://localhost:3000/products', {
+          headers: {
+            Authorization: `Bearer ${auth.token}`
+          }
+        });
+        this.produits = resp.data;
+        return this.produits;
+      } catch (error) {
+        console.error('Erreur lors du chargement des produits:', error.response || error.message);
+        return [];
+      }
+    },
+   
+   
+
+  
   },
 });

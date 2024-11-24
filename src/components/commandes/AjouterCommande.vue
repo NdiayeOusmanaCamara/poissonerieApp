@@ -1,197 +1,259 @@
 <template>
-  <div class="commande-detail">
+  <div class="form-container d-flex align-items-center">
+    <div class="form-content">
+      <router-link to="/dashboard/commandes" class="btn btn-secondary mb-3">
+        <i class="fas fa-arrow-left"></i>
+      </router-link>
 
-    <h2 class="text-center mb-4">Ajouter une nouvelle commande</h2>
+      <div class="commande-detail">
+        <form @submit.prevent="handleSubmit" class="p-4 shadow-sm bg-white rounded">
+          <h2 class="text-center mb-4">Ajouter une commande</h2>
 
-    <form @submit.prevent="handleSubmit">
-      <div class="d-flex justify-content-end gap-5">
-        <router-link to="/dashboard/commandes" class="btn btn-primary mt-3">Retour à la liste</router-link>
-        <button type="submit" class="btn btn-success mt-4">Enregistrer Commande</button>
-      </div>
-    </form>
-
-    <div class="d-flex justify-content-between gap-3 mt-3">
-      <div class="form-group w-100">
-        <label for="nom" class="form-label">Nom de la commande</label>
-        <input type="text" id="nom" v-model="form.nom" class="form-control" required />
-      </div>
-      <div class="form-group w-100">
-        <label for="date" class="form-label">Date de commande</label>
-        <input type="date" id="date" v-model="form.date" class="form-control" required />
-      </div>
-    </div>
-
-    <div class="d-flex justify-content-between gap-3 mt-3">
-      <div class="form-group w-100">
-        <label for="prix" class="form-label">Prix</label>
-        <input type="number" id="prix" v-model="form.prix" class="form-control" disabled />
-      </div>
-      <div class="form-group w-100">
-        <label for="utilisateurId" class="form-label">Utilisateur</label>
-        <select id="utilisateurId" v-model="form.utilisateurId" class="form-control" required>
-          <option disabled value="">Sélectionne un utilisateur</option>
-          <option v-for="utilisateur in utilisateurs" :key="utilisateur.id" :value="utilisateur.id">
-            {{ utilisateur.nom }}
-          </option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Section Détails de la Commande -->
-    <div>
-      <h3>Détails de la commande</h3>
-      <div v-for="(detail, index) in form.commandeDetails" :key="index" class="mb-3">
-        <div class="row">
-          <div class="col-md-4">
-            <label class="form-label">Produit</label>
-            <select v-model="detail.produitId" class="form-control" required>
-              <option disabled value="">Sélectionne un produit</option>
-              <option v-for="produit in produits" :key="produit.id" :value="produit.id">
-                {{ produit.nom }}
-              </option>
-            </select>
+          <!-- Informations de la commande -->
+          <div class="d-flex gap-2">
+            <div class="w-100">
+              <div class="form-group">
+                <label for="nom" class="form-label">Nom de la commande</label>
+                <input type="text" id="nom" v-model="form.nom" class="form-control" required />
+                <small v-if="errors.nom" class="text-danger">{{ errors.nom }}</small>
+              </div>
+            </div>
+            <div class="w-100">
+              <div class="form-group">
+                <label for="date" class="form-label">Date de commande</label>
+                <input type="date" id="date" v-model="form.date" class="form-control" required />
+                <small v-if="errors.date" class="text-danger">{{ errors.date }}</small>
+              </div>
+            </div>
           </div>
-          <div class="col-md-3">
-            <label class="form-label">Quantité</label>
-            <input type="number" v-model="detail.quantite" class="form-control" required min="1" />
+
+          <div class="d-flex justify-content-between gap-3 mt-2">
+            <div class="form-group w-100">
+              <label for="prix" class="form-label">Prix total</label>
+              <input type="number" step="0.01" v-model="form.prix" class="form-control" disabled />
+              <small v-if="errors.prix" class="text-danger">{{ errors.prix }}</small>
+            </div>
           </div>
-          <div class="col-md-3">
-            <label class="form-label">Prix unitaire</label>
-            <input type="number" v-model="detail.prix" class="form-control" required min="0" step="0.01" />
-          </div>
-          <div class="col-md-2 d-flex align-items-end">
-            <button type="button" class="btn btn-danger" @click="removeDetail(index)">
-              Supprimer
+
+          <!-- Détails de la commande -->
+          <div>
+            <h3>Détails de la commande</h3>
+            <div v-for="(detail, index) in form.DetailCommande" :key="index" class="d-flex gap-3 mt-3">
+              <div class="w-100">
+                <label class="form-label">Produit</label>
+                <select v-model="detail.produitId" class="form-control" required @change="updateTotalPrice">
+                  <option disabled value="">Sélectionner un produit</option>
+                  <option v-for="produit in produits" :key="produit.id" :value="produit.id">
+                    {{ produit.nom }}
+                  </option>
+                </select>
+              </div>
+              
+              <!-- Sélection du statut de la commande -->
+              <div class="w-100">
+                <label class="form-label">Statut</label>
+                <select v-model="detail.status" class="form-control" required>
+                  <option value="EN_ATTENTE">En attente</option>
+                  <option value="EN_TRANSIT">En cours</option>
+                  <option value="LIVRE">Livrée</option>
+                  <option value="ANNULE">Annulée</option>
+                </select>
+              </div>
+
+              <div class="w-100">
+                <label class="form-label">Quantité</label>
+                <input
+                  type="number"
+                  v-model="detail.quantite"
+                  class="form-control"
+                  required
+                  min="1"
+                  @input="updateTotalPrice"
+                />
+                
+              </div>
+
+              <div class="w-100">
+                <label class="form-label">Prix unitaire</label>
+                <input
+                  type="number"
+                  :value="produits.find(p => p.id === detail.produitId)?.prix || 0"
+                  class="form-control"
+                  disabled
+                />
+              </div>
+
+              <div class="w-100 d-flex align-items-end">
+                <button type="button" class="btn btn-danger" @click="removeDetail(index)">
+                  Supprimer
+                </button>
+              </div>
+            </div>
+            <button type="button" @click="addDetail" class="btn btn-primary mt-3">
+              Ajouter un produit
             </button>
           </div>
-        </div>
-      </div>
-      <button type="button" @click="addDetail" class="btn btn-primary mt-3">
-        Ajouter un produit
-      </button>
-    </div>
 
+          <!-- Soumettre la commande -->
+          <button type="submit" class="btn btn-success mt-5 w-100">Ajouter la commande</button>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
+  
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCommandeStore } from '@stores/commandeStore';
 import { useProduitStore } from '@stores/produitStore';
-import { useUserStore } from '@stores/utilisateurStore';
-import moment from 'moment';
+import { useToast } from 'vue-toastification';
 
-// Initialisation des stores
+// Dépendances
+const toast = useToast();
 const router = useRouter();
-const store = useCommandeStore();
+const commandeStore = useCommandeStore();
 const produitStore = useProduitStore();
-const utilisateurStore = useUserStore();
 
-const utilisateurs = ref([]);
+// Variables réactives
+const errors = ref({});
 const produits = ref([]);
-
-// Objet réactif pour gérer les valeurs du formulaire
 const form = ref({
   nom: '',
   date: '',
-  utilisateurId: '',
-  prix: 0,  // Calculé à partir des détails
-  commandeDetails: [{ produitId: '', quantite: 1, prix: 0 }],
+  prix: 0,
+  DetailCommande: [{ produitId: '', quantite: 1, prix: 0, status: 'EN_ATTENTE' }],
 });
 
-// Charger les utilisateurs et produits
+// Charger les produits disponibles
 onMounted(async () => {
   try {
-    await utilisateurStore.loadUtilisateurs();
-    await produitStore.loadProduits();
-    utilisateurs.value = utilisateurStore.utilisateurs;
-    produits.value = produitStore.produits;
+    produits.value = await produitStore.loadProduitsData();
   } catch (error) {
-    console.error("Erreur lors du chargement des utilisateurs ou produits:", error.message);
+    toast.error('Erreur lors du chargement des produits');
+    console.error(error.message);
   }
 });
 
-// Ajouter un détail de commande
+// Ajouter un détail
 const addDetail = () => {
-  form.value.commandeDetails.push({ produitId: '', quantite: 1, prix: 0 });
+  form.value.DetailCommande.push({ produitId: '', quantite: 1, prix: 0, status: 'EN_ATTENTE' });
 };
 
-// Supprimer un détail de commande
+// Supprimer un détail
 const removeDetail = (index) => {
-  if (form.value.commandeDetails.length > 1) {
-    form.value.commandeDetails.splice(index, 1);
+  if (form.value.DetailCommande.length > 1) {
+    form.value.DetailCommande.splice(index, 1);
+    updateTotalPrice();
   }
 };
 
-// Calculer le prix total
-const calculateTotalPrice = () => {
-  return form.value.commandeDetails.reduce((total, detail) => total + (detail.quantite * detail.prix), 0);
+// Mettre à jour le prix total
+const updateTotalPrice = () => {
+  form.value.prix = form.value.DetailCommande.reduce((total, detail) => {
+    const produit = produits.value.find((p) => p.id === detail.produitId);
+    return total + (produit ? produit.prix * detail.quantite : 0);
+  }, 0);
 };
 
-// Réinitialiser les champs du formulaire
-const initializeFields = () => {
-  form.value.nom = '';
-  form.value.date = '';
-  form.value.utilisateurId = '';
-  form.value.commandeDetails = [{ produitId: '', quantite: 1, prix: 0 }];
+// Validation du nom et de la quantité
+const validateForm = () => {
+  errors.value = {};
+
+  // Validation du nom de la commande (au moins 3 caractères)
+  if (form.value.nom.length < 3) {
+    errors.value.nom = 'Le nom de la commande doit contenir au moins 3 caractères.';
+  }
+
+  // Validation de la quantité (doit être supérieure à 1)
+  form.value.DetailCommande.forEach((detail, index) => {
+    if (detail.quantite < 1) {
+      errors.value[`quantite-${index}`] = 'La quantité doit être supérieure à 1.';
+    }
+  });
+
+  // Si des erreurs existent, retourner false
+  return Object.keys(errors.value).length === 0;
 };
 
-// Soumission du formulaire
+// Soumettre la nouvelle commande
 const handleSubmit = async () => {
-  form.value.prix = calculateTotalPrice();
-
-  const newCommande = {
-    nom: form.value.nom,
-    prix: form.value.prix,
-    date: moment(form.value.date).toISOString(),
-    utilisateurId: form.value.utilisateurId,
-    detailsCommande: JSON.parse(JSON.stringify(form.value.commandeDetails)),
-  };
-
   try {
-    await store.addCommande(newCommande);
-    console.log('Commande ajoutée avec succès :', newCommande);
-    initializeFields();
+    // Valider le formulaire
+    if (!validateForm()) {
+      toast.error('Veuillez corriger les erreurs dans le formulaire.');
+      return;
+    }
+
+    // Calculer le prix total
+    form.value.prix = form.value.DetailCommande.reduce((total, detail) => {
+      const produit = produits.value.find((p) => p.id === detail.produitId);
+      return total + (produit ? produit.prix * detail.quantite : 0);
+    }, 0);
+
+    // Convertir la date en format ISO pour Prisma
+    form.value.date = new Date(form.value.date).toISOString();
+
+    // Cloner les données du formulaire
+    const newCommande = {
+      ...form.value,
+      detailsOrder: form.value.DetailCommande,  // Mapper avec la structure attendue par le backend
+    };
+
+    // Ajouter la commande
+    await commandeStore.addCommande(newCommande);
+    toast.success('Commande ajoutée avec succès');
     router.push('/dashboard/commandes');
   } catch (error) {
-    console.error("Erreur lors de l'ajout de la commande:", error.response ? error.response.data : error.message);
+    toast.error('Erreur lors de l\'ajout de la commande');
+    console.error(error.message);
   }
 };
 </script>
 
+  
+ 
 <style scoped>
-/* Styles */
-.commande-detail {
+.form-container {
   max-width: 800px;
   margin: 50px auto;
   padding: 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-h2 {
-  margin-bottom: 20px;
-}
-
-.form-group {
-  margin-bottom: 15px;
+.form-content {
+  flex: 1;
 }
 
 .form-control {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
+  padding: 10px 15px;
+  border-radius: 5px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.3s ease;
 }
 
-button {
-  margin-top: 20px;
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: none;
 }
 
-.btn-primary {
-  display: inline-block;
-  padding: 10px 20px;
-  text-decoration: none;
+h2 {
+  color: #343a40;
+  font-weight: bold;
+}
+
+.shadow-sm {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bg-white {
+  background-color: white;
+}
+
+.rounded {
+  border-radius: 8px;
 }
 </style>

@@ -1,69 +1,128 @@
 <template>
-    <div v-if="vente" class="commande-detail">
-      <h2>Détails de la vente</h2>
-  
-      <p><strong>ID :</strong> {{ vente.id }}</p>
-      <p><strong>Montant  :</strong> {{ vente.montant }}</p>
-      <p><strong>Date :</strong> {{formatDate(vente.date) }}</p>
-      <p><strong>Utilisateur :</strong> {{ utilisateurNom }}</p>
-  
-      <router-link to="/dashboard/ventes" class="btn btn-primary">Retour à la liste</router-link>
-    </div>
-  </template>
-  
-
+  <div class="form-container d-flex align-items-center"></div>
+  <div class="form-content">
+    <router-link to="/dashboard/ventes" class="btn btn-secondary mb-3">
+      <i class="fas fa-arrow-left"></i>
+    </router-link>
+    <form class="p-4 shadow-sm bg-white rounded w-50">
+      <div v-if="vente" class="vente-details mt-4">
+        <h2 class="text-center mb-4">Détails de la Vente</h2>
+        <p><strong>Date:</strong> {{ formatDate(vente.date) }}</p>
+        <p><strong>Montant Total:</strong> {{ vente.montant }} €</p>
+        <h2 class="text-center mb-4">Produits de la Vente</h2>
+        <div v-if="vente.detailVentes && vente.detailVentes.length">
+          <h5>Produits dans la vente :</h5>
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Quantité</th>
+                <th>Prix unitaire</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(detail, index) in vente.detailVentes" :key="index">
+                <td>{{ getProduitName(detail.produitId) }}</td>
+                <td>{{ detail.quantite }}</td>
+                <td>{{ detail.prix }} €</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </form>
+  </div>
+</template>
 <script setup>
-
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { useVenteStore } from '@stores/venteStore';
+import { useVenteStore } from '@stores/venteStore'; // New store for 'Vente'
+import { useProduitStore } from '@stores/produitStore';
+import { useUserStore } from '@stores/utilisateurStore';
 import moment from 'moment';
+
 const route = useRoute();
-const store = useVenteStore();
+const venteStore = useVenteStore();
+const produitStore = useProduitStore();
+const utilisateurStore = useUserStore();
 const vente = ref(null);
-const utilisateurNom = ref('');
 
-const formatDate = (date) => {
-  return moment(date).format("DD/MM/YYYY"); // Format date to DD/MM/YYYY
-};
+// Chargement des données de la vente en fonction de l'ID de la route
 onMounted(async () => {
-  const id = route.params.id;
-  await store.loadDataFromApi(); // Assure que les données sont chargées
-  vente.value = store.ventes.find((v) => v.id === parseInt(id));
+  await venteStore.fetchVentes(); // Fetching 'Ventes' instead of 'Commandes'
+  await produitStore.loadProduitsData();
+  await utilisateurStore.loadUserData();
 
-  if (vente.value) {
-    // Charger les utilisateurs et trouver le nom de l'utilisateur associé à cette commande
-    const utilisateurs = await store.loadUtilisateurs();
-    const utilisateur = utilisateurs.find(u => u.id === vente.value.utilisateurId);
-    utilisateurNom.value = utilisateur ? utilisateur.nom : 'Utilisateur inconnu';
-  }
+  vente.value = venteStore.ventes.find(v => v.id === Number(route.params.id));
 });
-
+const getProduitName = (produitId) => {
+  const produit = produitStore.produits.find(p => p.id === produitId);
+  return produit ? produit.nom : 'Produit inconnu';
+};
+// Méthodes utilitaires
+const formatDate = (date) => {
+  return moment(date).format('YYYY-MM-DD');
+};
 </script>
 
 <style scoped>
-.commande-detail {
+.rounded[data-v-db82e79a] {
+  border-radius: 8px;
+  margin: auto;
+}
+.form-container {
   max-width: 800px;
   margin: 50px auto;
   padding: 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-content {
+  flex: 1;
+}
+
+.form-control {
+  padding: 10px 15px;
+  border-radius: 5px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: none;
+}
+
+.btn {
+
+  font-weight: 600;
+  margin-left: 363px;
+}
+
+.btn:hover {
+  background-color: #1abc9c;
 }
 
 h2 {
-  margin-bottom: 20px;
+  color: #343a40;
+  font-weight: bold;
 }
 
-p {
-  margin: 10px 0;
-  font-size: 18px;
+.shadow-sm {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.btn-primary {
-  margin-top: 20px;
-  display: inline-block;
-  padding: 10px 20px;
-  text-decoration: none;
+.bg-white {
+  background-color: white;
+}
+.rounded[data-v-374408ce] {
+  border-radius: 8px;
+
+  margin: auto;
+}
+.rounded {
+  border-radius: 8px;
 }
 </style>

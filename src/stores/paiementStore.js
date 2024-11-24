@@ -1,152 +1,116 @@
-import { defineStore } from "pinia";
-import axios from "axios";
+import { defineStore } from 'pinia';
+import axios from 'axios';
+import { useAuthStore } from "./authStore";
 
-export const usePaiementStore = defineStore("paiements", {
+export const usePaiementStore = defineStore('paiementStore', {
   state: () => ({
     paiements: [],
     commandes: [],
-    utilisateurs: [],
-    
+    paiement: {},
   }),
-
-  actions: {
-    getToken() {
-      return localStorage.getItem('token'); // ou sessionStorage.getItem('token')
-    },
-    async loadPaiements() {
-      try {
-        const response = await fetch('http://localhost:3000/paiements'); // Remplace par ton URL d'API ou autre source de données
-        this.paiements = await response.json();
-      } catch (error) {
-        console.error('Erreur lors du chargement des paiements :', error);
-      }
-    },
-
-    async loadDataFromApi() {
-      try {
-        const token = this.getToken(); // Récupérer le token JWT
-        const resp = await axios.get("http://localhost:3000/paiements", {
-          headers: {
-            Authorization: `Bearer ${token}` // Ajouter le token aux en-têtes
-          }
-        });
-
-        this.paiements = resp.data;
-      } catch (error) {
-        console.error("Erreur lors du chargement des paiements :", error);
-        this.paiements = [];
-      }
-    },
-    getPaiement(id) {
-      return this.paiements.find(paiement => paiement.id === id);
-    },
-    async updatedPaiement(id, updatedPaiement) {
-      try {
-        const token = this.getToken(); // Récupérer le token JWT
-        await axios.put(`http://localhost:3000/paiements/${id}`, updatedPaiement, {
-          headers: {
-            Authorization: `Bearer ${token}` // Ajouter le token aux en-têtes
-          }
-        });
-        const index = this.paiements.findIndex(paiement => paiement.id === id);
-        if (index !== -1) {  
-          this.paiements[index] = updatedPaiement;
-        }
-      } catch (error) {
-        console.error("Erreur lors de la mise à jour du produit:", error);
-      }
-    },
-    
-    async loadUtilisateurs() {
-      try {
   
-        const resp = await axios.get("http://localhost:3000/utilisateurs",);
-        this.utilisateurs = resp.data;
-        return this.utilisateurs; 
+  actions: {
+    async fetchCommandes() {
+      const authStore = useAuthStore();
+      try {
+        const response = await axios.get('http://localhost:3000/orders', {
+          headers: {
+            Authorization: `Bearer ${authStore.token}`,
+          },
+        });
+        this.commandes = response.data;
+        console.log("Commandes chargées :", this.commandes); // Ajoutez ce log pour vérifier les données
+        return this.commandes;
       } catch (error) {
-        console.error("Erreur lors du chargement des utilisateurs:", error);
-        return [];
+        console.error('Erreur lors du chargement des commandes :', error.message);
+        throw error;
       }
     },
     
-    async loadCommandes() {
+    // Récupérer le token JWT depuis le localStorage ou sessionStorage
+    async loadPaiements() {
+      const authStore = useAuthStore();
       try {
-        const token = this.getToken(); // Récupérer le token JWT
-        const resp = await axios.get("http://localhost:3000/commandes", {
+        const response = await axios.get('http://localhost:3000/paiements', {
           headers: {
-            Authorization: `Bearer ${token}` // Ajouter le token aux en-têtes
-          }
+            Authorization: `Bearer ${authStore.token}`,
+          },
         });
-        this.commandes = resp.data;
-        return this.commandes; 
+        this.paiements = response.data;
+        return this.paiements;
       } catch (error) {
-        console.error("Erreur lors du chargement des commandes:", error);
-        return [];
+        console.error('Erreur lors du chargement des paiements :', error.message);
+        throw error;
       }
     },
-    async deletePaiement(id) {
+    
+    async loadPaiementById(id) {
+      const authStore = useAuthStore();
       try {
-        const token = this.getToken(); // Récupérer le token JWT
-        await axios.delete(`http://localhost:3000/paiements/${id}`, {
+        const response = await axios.get(`http://localhost:3000/paiements/${id}`, {
           headers: {
-            Authorization: `Bearer ${token}` // Ajouter le token aux en-têtes
-          }
+            Authorization: `Bearer ${authStore.token}`,
+          },
         });
-        this.paiements = this.paiements.filter((paiement) => paiement.id !== id);
+        this.paiement = response.data;
+        return this.paiement;
       } catch (error) {
-        console.error("Erreur lors de la suppression du paiement:", error);
+        console.error('Erreur lors du chargement du paiement :', error.message);
+        throw error;
       }
     },
 
     async addPaiement(newPaiement) {
+      const authStore = useAuthStore();
       try {
-        const token = this.getToken(); // Récupérer le token JWT
         const response = await axios.post('http://localhost:3000/paiements', newPaiement, {
           headers: {
-            Authorization: `Bearer ${token}` // Ajouter le token aux en-têtes
-          }
+            Authorization: `Bearer ${authStore.token}`,
+          },
         });
-        console.log("Paiement ajouté avec succès :", response.data);
-        return response.data;
+        if (response.status !== 200 && response.status !== 201) {
+          throw new Error("L'ajout a échoué.");
+        }
+        await this.loadPaiements(); // Reload the list of payments after adding
       } catch (error) {
-        console.error("Erreur lors de l'ajout du paiement :", error);
-        throw error; 
-      }
-    },
-    async loadPaiements() {
-      try {
-        const response = await fetch('http://localhost:3000/paiements');  
-        this.paiements = await response.json();  
-      } catch (error) {
-        console.error('Erreur lors du chargement des paiements :', error);
-      }
-    },
-    async deleteUtilisateur(id) {
-      try {
-        const token = this.getToken(); // Récupérer le token JWT
-        await axios.delete(`http://localhost:3000/utilisateurs/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}` // Ajouter le token aux en-têtes
-          }
-        });
-        await this.loadDataFromApi();
-      } catch (error) {
-        console.error("Erreur lors de la suppression de l'utilisateur :", error);
+        console.error("Erreur lors de l'ajout du paiement :", error.response?.data || error.message);
+        throw error;
       }
     },
 
-async deleteCommande(id) {
-  try {
-    const token = this.getToken(); // Récupérer le token JWT
-    await axios.delete(`http://localhost:3000/commandes/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}` // Ajouter le token aux en-têtes
+    async updatePaiement(id, updatedPaiement) {
+      const authStore = useAuthStore();
+      try {
+        const response = await axios.put(`http://localhost:3000/paiements/${id}`, updatedPaiement, {
+          headers: {
+            Authorization: `Bearer ${authStore.token}`,
+          },
+        });
+        if (response.status === 200 || response.status === 201) {
+          await this.loadPaiements(); // Reload the list of payments after updating
+        } else {
+          throw new Error('La mise à jour a échoué.');
+        }
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour du paiement :', error.message);
+        throw error;
       }
-    });
-    await this.loadDataFromApi();
-  } catch (error) {
-    console.error("Erreur lors de la suppression de commandes :", error);
-  }
-},
-},
+    },
+
+    async removePaiement(id) {
+      const authStore = useAuthStore();
+      try {
+        const response = await axios.delete(`http://localhost:3000/paiements/${id}`, {
+          headers: {
+            Authorization: `Bearer ${authStore.token}`,
+          },
+        });
+        this.paiements = this.paiements.filter(paiement => paiement.id !== id);
+        return response.data;
+      } catch (error) {
+        console.error('Erreur lors de la suppression du paiement :', error.message);
+        throw error;
+      }
+    },
+  },
 });

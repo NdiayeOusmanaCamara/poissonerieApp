@@ -1,70 +1,75 @@
 <template>
-    <div class="commande-detail">
+    <div class="form-container d-flex align-items-center">
         <div class="form-content">
-            <h2 class="text-center mb-4">Modifier un produit</h2>
-            <form @submit.prevent="submitForm">
-                <div class="d-flex gap-2">
-                    <div class="w-100">
-                        <div class="form-group">
-                            <label for="nom">Nom</label>
-                            <input type="text" id="nom" v-model="form.nom" class="form-control" required />
+            <router-link to="/dashboard/produits" class="btn btn-secondary mb-3">
+                <i class="fas fa-arrow-left"></i>
+            </router-link>
+            <div class="commande-detail">
+
+
+                <form @submit.prevent="submitForm" class="p-4 shadow-sm bg-white rounded">
+                    <h2 class="text-center mb-4">Modifier un produit</h2>
+                    <div class="d-flex gap-2">
+                        <div class="w-100">
+                            <div class="form-group">
+                                <label for="nom">Nom</label>
+                                <input type="text" id="nom" v-model="form.nom" class="form-control" required />
+                            
+                                <small v-if="errors.nom" class="text-danger">{{ errors.nom }}</small></div>
+                            <div class="form-group">
+                                <label for="categorie">Catégorie</label>
+                                <input type="text" id="categorie" v-model="form.categorie" class="form-control"
+                                    required />
+                                    <small v-if="errors.categorie" class="text-danger">{{ errors.categorie }}</small>
+                                </div>
                         </div>
-                        <div class="form-group">
-                            <label for="categorie">Catégorie</label>
-                            <input type="text" id="categorie" v-model="form.categorie" class="form-control" required />
-                        </div>
-                    </div>
-                    <div class="w-100">
-                        <div class="form-group">
-                            <label for="quantite">Quantité</label>
-                            <input type="number" id="quantite" v-model="form.quantite" class="form-control" required />
-                        </div>
-                        <div class="form-group">
-                            <label for="prix">Prix</label>
-                            <input type="number" id="prix" v-model="form.prix" class="form-control" required />
-                        </div>
-                    </div>
-                </div>
-                <div class="d-flex gap-2">
-                    <div class="w-100">
-                        <div class="form-group">
-                            <label for="description">Description</label>
-                            <input type="text" id="description" v-model="form.description" class="form-control"
-                                required />
-                        </div>
-                    </div>
-                    <div class="w-100">
-                        <div class="form-group">
-                            <label for="date">Date</label>
-                            <input type="date" id="date" v-model="form.date" class="form-control" required />
+                        <div class="w-100">
+                            <div class="form-group">
+                                <label for="quantite">Quantité</label>
+                                <input type="number" id="quantite" v-model="form.quantite" class="form-control"
+                                    required />
+                                    <small v-if="errors.quantite" class="text-danger">{{ errors.quantite }}</small>
+                                </div>
+                            <div class="form-group">
+                                <label for="prix">Prix</label>
+                                <input type="number" id="prix" v-model="form.prix" class="form-control" required />
+                                <small v-if="errors.prix" class="text-danger">{{ errors.prix }}</small>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="d-flex gap-2">
-                    <div class="w-100">
-                        <div class="form-group">
-                            <label for="utilisateur">Utilisateur</label>
-                            <input type="text" id="utilisateur" v-model="utilisateurNom" class="form-control"
-                                disabled />
+                    <div class="d-flex gap-2">
+                        <div class="w-100">
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <input type="text" id="description" v-model="form.description" class="form-control"
+                                    required />
+                                    <small v-if="errors.description" class="text-danger">{{ errors.description }}</small>
+                                </div>
                         </div>
+                        <div class="w-100">
+                            <div class="form-group">
+                                <label for="date">Date</label>
+                                <input type="date" id="date" v-model="form.date" class="form-control" required />
+                                <small v-if="errors.date" class="text-danger">{{ errors.date }}</small>
+                            </div>
+                        </div>
+                    </div>
+                        <div class="w-100">
+                            <div class="form-group">
+                                <label for="stock">Stock</label>
+                                <input type="number" id="number" v-model="form.stock" class="form-control" required />
+                                <small v-if="errors.stock" class="text-danger">{{ errors.stock }}</small>
+                            </div>
+                        
                     </div>
 
-                    <div class="w-100">
-                        <div class="form-group">
-                            <label for="stock">Stock</label>
-                            <input type="number" id="number" v-model="form.stock" class="form-control" required />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-end gap-5">
-                    <router-link to="/dashboard/produits" class="btn btn-primary mt-3">Retour à la
-                        liste</router-link>
-                    <button type="submit" class="btn btn-success">Modifier</button>
-                </div>
-            </form>
+                    
+                        <button type="submit" class="btn btn-success mt-5 w-100">Mettre à jour la produit</button>
+                    
+                </form>
+            </div>
         </div>
-    </div>
+        </div>
 </template>
 
 <script setup>
@@ -85,13 +90,13 @@ const form = ref({
     description: '',
     date: '',
     stock: '',
-    utilisateurId: null,
+
 });
-const utilisateurNom = ref(''); // Ajout de la variable pour le nom de l'utilisateur
+
 
 onMounted(async () => {
     const id = route.params.id;
-    await store.loadDataFromApi(); // Charger les produits depuis l'API
+    await store.loadProduitById(id); // Charger les produits depuis l'API
     produit.value = store.produits.find((p) => p.id === parseInt(id));
 
     if (produit.value) {
@@ -102,18 +107,24 @@ onMounted(async () => {
         form.value.description = produit.value.description;
         form.value.date = produit.value.date;
         form.value.stock = produit.value.stock;
-        form.value.utilisateurId = produit.value.utilisateurId;
 
-        // Charger le nom de l'utilisateur en fonction de l'ID
-        const utilisateur = store.utilisateurs.find((u) => u.id === produit.value.utilisateurId);
-        if (utilisateur) {
-            utilisateurNom.value = utilisateur.nom; // Mettre à jour le nom de l'utilisateur
-        }
+
+
+
     }
 });
+const toast = {
+    success: (message) => {
+        alert(`Succès : ${message}`);
+    },
+    error: (message) => {
+        alert(`Erreur : ${message}`);
+    }
+};
 
 async function submitForm() {
     const updatedProduit = {
+        
         ...produit.value,
         nom: form.value.nom,
         categorie: form.value.categorie,
@@ -122,47 +133,70 @@ async function submitForm() {
         description: form.value.description,
         date: form.value.date,
         stock: form.value.stock,
-        utilisateurId: form.value.utilisateurId,
     };
     await store.updatedProduit(produit.value.id, updatedProduit);
+
+    // Utilisation de la notification toast personnalisée
+    toast.success('Produit mis à jour avec succès!');
     router.push('/dashboard/produits');
 }
+
+
 </script>
 
 
+
 <style scoped>
-.commande-detail {
-    max-width: 800px;
-    margin: 50px auto;
-    padding: 20px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+.form-container {
+  max-width: 800px;
+  margin: 50px auto;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-h2 {
-    margin-bottom: 20px;
-}
 
-.form-group {
-    margin-bottom: 15px;
+
+.form-content {
+  flex: 1;
 }
 
 .form-control {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
+  padding: 10px 15px;
+  border-radius: 5px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.3s ease;
 }
 
-.btn {
-    margin-top: 20px;
-
-    color: white;
-    font-size: 16px;
-    font-weight: 600;
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: none;
 }
 
-.btn:hover {
-    background-color: #16a085;
+.btn1 {
+  background-color: #1abc9c;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+
+
+h2 {
+  color: #343a40;
+  font-weight: bold;
+}
+
+.shadow-sm {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bg-white {
+  background-color: white;
+}
+
+.rounded {
+  border-radius: 8px;
 }
 </style>

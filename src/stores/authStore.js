@@ -3,21 +3,21 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
 
-export const useAuthStore = defineStore("auth", {
+export const useAuthStore = defineStore("authStore", {
   state: () => ({
     isAuthenticated: false,
-    user: null,
+    utilisateur: null,
     token: null,
   }),
   actions: {
     async login(email, password) {
       try {
-        const response = await axios.post("http://localhost:3000/api/login", { email, password });
-        const { accessToken, user } = response.data;
+        const response = await axios.post("http://localhost:3000/auth/login", { email, password });
+        const { accessToken, utilisateur } = response.data;
 
         this.isAuthenticated = true;
         this.token = accessToken;
-        this.user = user;
+        this.utilisateur = utilisateur;
         localStorage.setItem('authToken', accessToken);
 
         // Ajout de l'authentification dans les headers d'axios
@@ -34,7 +34,7 @@ export const useAuthStore = defineStore("auth", {
 
     logout() {
       this.isAuthenticated = false;
-      this.user = null;
+      this.utilisateur = null;
       this.token = null;
       localStorage.removeItem("authToken");
       delete axios.defaults.headers.common["Authorization"];
@@ -52,7 +52,7 @@ export const useAuthStore = defineStore("auth", {
           // Le token est valide, connecter l'utilisateur
           this.isAuthenticated = true;
           this.token = token;
-          this.user = decodedToken;  // Si tu stockes des informations utilisateur dans le token
+          this.utilisateur = decodedToken;  // Si tu stockes des informations utilisateur dans le token
           axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         } else {
           // Le token est expiré, déconnecter l'utilisateur
