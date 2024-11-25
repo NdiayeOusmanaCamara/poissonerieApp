@@ -39,7 +39,7 @@
           <div class="w-100">
             <div class="form-group">
               <label for="date">Date du Mouvement</label>
-              <input type="date" id="date" v-model="formattedDate" class="form-control" readonly />
+              <input id="date" v-model="formattedDate" class="form-control" readonly />
             </div>
           </div>
         </form>

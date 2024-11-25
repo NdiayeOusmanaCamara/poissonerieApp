@@ -31,7 +31,7 @@
                   <td>{{ produit.prix }}</td>
                   <td>{{ produit.description }}</td>
                   <td>{{ produit.stock }}</td> <!-- Affichage du stock -->
-                  <td>{{ new Date(produit.date).toLocaleDateString() }}</td> <!-- Affichage de la date formatée -->
+                  <td>{{  formatDate(produit.date)}}</td> <!-- Affichage de la date formatée -->
                   <!-- <td>{{ getUtilisateurNom(produit.utilisateurId) }}</td> -->
 
                   <td class="text-center d-flex">
@@ -67,11 +67,15 @@ import { useRouter } from "vue-router";
 import { useProduitStore } from "@stores/produitStore"; // Make sure this is the correct path
 import { useToast } from 'vue-toastification';
 import Swal from 'sweetalert2';
+import moment from 'moment';
 
 const produitStore = useProduitStore(); // Use your Pinia store for produit management
 const router = useRouter();
 const nom = ref('');
 const produits = ref([]);
+const formatDate = (date) => {
+  return moment(date).format('YYYY-MM-DD');
+};
 
 const toast = {
     success: (message) => {

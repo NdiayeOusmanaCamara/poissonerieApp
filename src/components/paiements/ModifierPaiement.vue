@@ -74,7 +74,10 @@ const form = ref({
 
 const commandes = ref([]); // To store fetched commandes
 const errors = ref({}); // To store errors
-
+function formatDateForInput(dateString) {
+  const date = new Date(dateString);
+  return date.toISOString().substring(0, 10); // Convert to YYYY-MM-DD
+}
 onMounted(async () => {
   const id = route.params.id;
   await store.loadPaiementById(id); // Load paiement details
@@ -85,7 +88,7 @@ onMounted(async () => {
     form.value.mode_paiement = paiement.value.mode_paiement;
     form.value.commandeId = paiement.value.commandeId;
     form.value.utilisateurId = paiement.value.utilisateurId;
-    form.value.date = paiement.value.date;
+    form.value.date = formatDateForInput(paiement.value.date);
   }
 
   // Fetch commandes to display in the dropdown

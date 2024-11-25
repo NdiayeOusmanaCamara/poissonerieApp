@@ -21,7 +21,7 @@
           <tbody>
               <tr v-for="(paiement,index) in paiements" :key="index">
                 <td>{{ paiement.id }}</td>
-                  <td>{{ new Date(paiement.date).toLocaleDateString() }}</td>
+                  <td>{{ formatDate(paiement.date)}}</td>
                   <td>{{ paiement.montant}} €</td>
                   <td>{{ paiement.mode_paiement }}</td>     
           <td>{{ getCommandeName(paiement.commandeId) }}</td>
@@ -59,7 +59,7 @@ import { onMounted, ref } from 'vue';
 import { usePaiementStore } from '@/stores/paiementStore';
 import { useToast } from 'vue-toastification';
 import Swal from 'sweetalert2';
-
+import moment from 'moment';
 const paiementStore = usePaiementStore();
 const toast = {
     success: (message) => {
@@ -68,6 +68,9 @@ const toast = {
     error: (message) => {
         alert(`Erreur : ${message}`);
     }
+};
+const formatDate = (date) => {
+  return moment(date).format('YYYY-MM-DD');
 };
 const paiements = ref([]);
 

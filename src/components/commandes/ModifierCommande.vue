@@ -1,23 +1,16 @@
 <template>
   <div class="form-container d-flex align-items-center">
     <div class="form-content">
-      <router-link to="/dashboard/commandes" class="btn btn-secondary mb-3">
+      <router-link to="/dashboard/receptions" class="btn btn-secondary mb-3">
         <i class="fas fa-arrow-left"></i>
       </router-link>
 
-      <div class="commande-detail">
+      <div class="reception-detail">
         <form @submit.prevent="handleSubmit" class="p-4 shadow-sm bg-white rounded">
           <h2 class="text-center mb-4">Modifier la commande</h2>
 
           <!-- Informations de la commande -->
           <div class="d-flex gap-2">
-            <div class="w-100">
-              <div class="form-group">
-                <label for="nom" class="form-label">Nom de la commande</label>
-                <input type="text" id="nom" v-model="form.nom" class="form-control" required />
-                <small v-if="errors.nom" class="text-danger">{{ errors.nom }}</small>
-              </div>
-            </div>
             <div class="w-100">
               <div class="form-group">
                 <label for="date" class="form-label">Date de commande</label>
@@ -26,10 +19,9 @@
               </div>
             </div>
           </div>
-
           <div class="d-flex justify-content-between gap-3 mt-2">
             <div class="form-group w-100">
-              <label for="prix" class="form-label">Prix total</label>
+              <label for="prix" class="form-label">Montant total</label>
               <input type="number" step="0.01" v-model="form.prix" class="form-control" disabled />
               <small v-if="errors.prix" class="text-danger">{{ errors.prix }}</small>
             </div>
@@ -38,23 +30,14 @@
           <!-- Détails de la commande -->
           <div>
             <h3>Détails de la commande</h3>
-            <div v-for="(detail, index) in form.DetailCommande" :key="index" class="d-flex gap-3 mt-3">
+            <div v-for="(detail, index) in form.details" :key="index" class="d-flex gap-3 mt-3">
               <div class="w-100">
                 <label class="form-label">Produit</label>
-                <select v-model="detail.produitId" class="form-control" required @change="updateTotalPrice">
+                <select v-model="detail.produitId" class="form-control" required @change="updateTotalAmount">
                   <option disabled value="">Sélectionner un produit</option>
                   <option v-for="produit in produits" :key="produit.id" :value="produit.id">
                     {{ produit.nom }}
                   </option>
-                </select>
-              </div>
-              <div class="w-100">
-                <label class="form-label">Statut</label>
-                <select v-model="detail.status" class="form-control" required>
-                  <option value="EN_ATTENTE">En attente</option>
-                  <option value="EN_COURS">En cours</option>
-                  <option value="LIVREE">Livrée</option>
-                  <option value="ANNULEE">Annulée</option>
                 </select>
               </div>
               <div class="w-100">
@@ -65,9 +48,8 @@
                   class="form-control"
                   required
                   min="1"
-                  @input="validateQuantity(detail, index)"
+                  @input="updateTotalAmount"
                 />
-                <small v-if="errors[`quantite${index}`]" class="text-danger">{{ errors[`quantite${index}`] }}</small>
               </div>
               <div class="w-100">
                 <label class="form-label">Prix unitaire</label>
@@ -116,24 +98,26 @@ const produitStore = useProduitStore();
 const errors = ref({});
 const produits = ref([]);
 const form = ref({
-  nom: '',
   date: '',
   prix: 0,
-  DetailCommande: [{ produitId: '', quantite: 1, status: '', prix: 0 }],
+  utilisateurId: null,
+  details: [{ produitId: '', quantite: 1, prix: 0 }],
 });
 
 // Charger les produits et les données de la commande
 onMounted(async () => {
   try {
+    // Charger les produits
     produits.value = await produitStore.loadProduitsData();
+
+    // Charger la commande existante
     const commandeId = route.params.id;
     const commande = await commandeStore.getCommandeById(commandeId);
 
-    form.value.nom = commande.nom || '';
     form.value.date = commande.date ? moment(commande.date).format('YYYY-MM-DD') : '';
     form.value.prix = commande.prix || 0;
-
-    form.value.DetailCommande = (commande.DetailCommande).map((detail) => ({
+  
+    form.value.details = commande.details.map((detail) => ({
       produitId: detail.produitId,
       quantite: detail.quantite || 1,
       prix: produits.value.find((p) => p.id === detail.produitId)?.prix || 0,
@@ -146,30 +130,20 @@ onMounted(async () => {
 
 // Ajouter un détail
 const addDetail = () => {
-  form.value.DetailCommande.push({ produitId: '', quantite: 1, status: '', prix: 0 });
+  form.value.details.push({ produitId: '', quantite: 1, prix: 0 });
 };
 
 // Supprimer un détail
 const removeDetail = (index) => {
-  if (form.value.DetailCommande.length > 1) {
-    form.value.DetailCommande.splice(index, 1);
-    updateTotalPrice();
+  if (form.value.details.length > 1) {
+    form.value.details.splice(index, 1);
+    updateTotalAmount();
   }
 };
 
-// Valider la quantité
-const validateQuantity = (detail, index) => {
-  if (detail.quantite < 1) {
-    errors.value[`quantite${index}`] = 'Quantité doit être supérieure ou égale à 1';
-  } else {
-    delete errors.value[`quantite${index}`];
-    updateTotalPrice();
-  }
-};
-
-// Mettre à jour le prix total
-const updateTotalPrice = () => {
-  form.value.prix = form.value.DetailCommande.reduce((total, detail) => {
+// Mettre à jour le montant total
+const updateTotalAmount = () => {
+  form.value.prix = form.value.details.reduce((total, detail) => {
     const produit = produits.value.find((p) => p.id === detail.produitId);
     return total + (produit ? produit.prix * detail.quantite : 0);
   }, 0);
@@ -178,27 +152,28 @@ const updateTotalPrice = () => {
 // Soumettre la commande modifiée
 const handleSubmit = async () => {
   try {
-    form.value.prix = form.value.DetailCommande.reduce((total, detail) => {
-      const produit = produits.value.find((p) => p.id === detail.produitId);
-      return total + (produit ? produit.prix * detail.quantite : 0);
-    }, 0);
+    // Calculer le montant total
+    updateTotalAmount();
 
+    // Convertir la date en format ISO pour Prisma
     form.value.date = moment(form.value.date).toISOString();
+
+    // Cloner les données du formulaire
     const updatedCommande = {
       ...form.value,
-      detailsOrder: form.value.DetailCommande,
+      details: form.value.details,
     };
 
+    // Soumettre la commande mise à jour
     await commandeStore.updateCommande(route.params.id, updatedCommande);
     toast.success('Commande mise à jour avec succès');
-    router.push('/dashboard/commandes');
+    router.push('/dashboard/receptions');
   } catch (error) {
     toast.error('Erreur lors de la mise à jour');
     console.error(error.message);
   }
 };
 </script>
-
 
 <style scoped>
 .form-container {
@@ -224,13 +199,6 @@ const handleSubmit = async () => {
 .form-control:focus {
   border-color: #007bff;
   box-shadow: none;
-}
-
-.btn1 {
-  background-color: #1abc9c;
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
 }
 
 h2 {
