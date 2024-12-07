@@ -13,44 +13,41 @@
           <div class="d-flex gap-2">
             <div class="w-100">
               <div class="form-group">
-                <label for="nom" class="form-label">Nom de la livraison</label>
-                <input type="text" id="nom" v-model="form.nom" class="form-control" required />
+                <label for="nom" class="form-label">Nom du destinataire</label>
+                <input type="name" id="nom" v-model="form.nom" class="form-control" required />
                 <small v-if="errors.nom" class="text-danger">{{ errors.nom }}</small>
               </div>
             </div>
-            <div class="w-100">
-              <div class="form-group">
-                <label for="date" class="form-label">Date de livraison</label>
-                <input type="date" id="date" v-model="form.date" class="form-control" required />
-                <small v-if="errors.date" class="text-danger">{{ errors.date }}</small>
-              </div>
-            </div>
-          </div>
+           
+         
           
           <div class="w-100">
             <div class="form-group">
               <label for="contact" class="form-label">Contact</label>
-              <input type="phone" id="contact" v-model="form.contact" class="form-control" required />
+              <input type="tel" id="contact" v-model="form.contact" class="form-control" required />
+
               <small v-if="errors.contact" class="text-danger">{{ errors.contact }}</small>
             </div>
           </div>
+          
+        </div>
 
           <!-- Détails de la livraison -->
           <div>
             <h3>Détails de la livraison</h3>
-            <div v-for="(detail, index) in form.detailLivraisons" :key="index" class="d-flex gap-3 mt-3">
+            <div v-for="(detail, index) in form.details" :key="index" class="d-flex gap-3 mt-3">
               <div class="w-100">
                 <label class="form-label">Commande</label>
                 <select v-model="detail.commandeId" class="form-control" required>
                   <option disabled value="">Sélectionner une commande</option>
                   <option v-for="commande in commandes" :key="commande.id" :value="commande.id">
-                    {{ commande.nom }}
+                    {{ commande.id }}
                   </option>
                 </select>
               </div>
               <div class="w-100">
                 <label class="form-label">Statut</label>
-                <select v-model="detail.status" class="form-control" required>
+                <select v-model="detail.status" class="form-select" required>
                   <option value="EN_ATTENTE">En attente</option>
                   <option value="EN_TRANSIT">En transit</option>
                   <option value="LIVRE">Livré</option>
@@ -83,8 +80,17 @@ import { useRouter } from 'vue-router';
 import { useLivraisonStore } from '@stores/livraisonStore';
 import { useCommandeStore } from '@stores/commandeStore';
 import { useToast } from 'vue-toastification';
+import moment from 'moment';  // Import Moment.js
 
-const toast = useToast();
+const toast = {
+  success: (message) => {
+    alert(`Succès : ${message}`);
+  },
+  error: (message) => {
+    alert(`Erreur : ${message}`);
+  }
+};
+
 const router = useRouter();
 const livraisonStore = useLivraisonStore();
 const commandeStore = useCommandeStore();
@@ -95,7 +101,8 @@ const form = ref({
   nom: '',
   date: '',
   contact: '',
-  detailLivraisons: [{ commandeId: '', status: 'EN_ATTENTE' }],
+  
+  details: [{ commandeId: '', status: '', }],
 });
 
 onMounted(async () => {
@@ -107,38 +114,54 @@ onMounted(async () => {
 });
 
 const addDetail = () => {
-  form.value.detailLivraisons.push({ commandeId: '', status: 'EN_ATTENTE' });
+  const existingCommandes = form.value.details.map(detail => detail.commandeId);
+  const selectedCommande = form.value.details[form.value.details.length - 1].commandeId;
+  
+  if (existingCommandes.includes(selectedCommande)) {
+    toast.error('Cette commande a déjà été ajoutée.');
+    return;
+  }
+
+  form.value.details.push({ commandeId: '', status:''});
 };
 
 const removeDetail = (index) => {
-  if (form.value.detailLivraisons.length > 1) {
-    form.value.detailLivraisons.splice(index, 1);
+  if (form.value.details.length > 1) {
+    form.value.details.splice(index, 1);
   }
 };
 
 const handleSubmit = async () => {
-  errors.value = {};
-  try {
-    form.value.date = new Date(form.value.date).toISOString();
-    const newLivraison = {
-      ...form.value,
-      detailLivraisons: form.value.detailLivraisons,
-    };
+  errors.value = {}; // Reset errors before the new submit
 
-    await livraisonStore.addLivraison(newLivraison);
+  // Parse the date using moment and compare with today's date
+  const today = moment().startOf('day');  // Get the start of today (00:00:00)
+  const selectedDate = moment(form.value.date).startOf('day');  // Parse selected date and set to 00:00:00
+
+  if (selectedDate.isBefore(today)) {
+    errors.value.date = "La date doit être aujourd'hui ou dans le futur.";  // Error message if the date is in the past
+    return;
+  }
+
+  try {
+    form.value.date = form.value.date ? moment(form.value.date).toISOString() : '';  // Format date to ISO string
+    const newLivraison = { ...form.value, details: form.value.details };
+
+    await livraisonStore.addLivraison(newLivraison); // Make the API call
     toast.success('Livraison ajoutée avec succès');
     router.push('/dashboard/livraisons');
   } catch (error) {
     if (error.response && error.response.data && error.response.data.errors) {
       error.response.data.errors.forEach((err) => {
-        errors.value[err.path] = err.msg;
+        errors.value[err.path] = err.msg; // Store errors by field name
       });
     } else {
-      toast.error('Une erreur est survenue lors de l\'ajout.');
+      toast.error('cette commande est deja converite en livraison');
     }
   }
 };
 </script>
+
 
 <style scoped>
 .form-container {

@@ -13,29 +13,31 @@
                   <th scope="col">ID</th>
                   <th scope="col">Produit</th>
                   <th scope="col">Categorie</th>
-                  <th scope="col">Quantité</th>
                   <th scope="col">Prix</th>
                   <th scope="col">Description</th>
                   <th scope="col">Stock</th> <!-- Nouvelle colonne pour le stock -->
-                  <th scope="col">Date</th>
+                  <th scope="col">Date Entrée</th>
+                  <th scope="col">Date Limite</th>
                   <!-- <th scope="col">Utilisateur</th> -->
                   <th class="text-center">Actions</th>
               </tr>
           </thead>
           <tbody>
-              <tr v-for="(produit) in produits" :key="produit.id">
-                  <td>{{ produit.id }}</td>
+              <tr v-for="(produit, index) in produits" :key="index">
+                  <td>{{ produit.id}}</td>
                   <td>{{ produit.nom }}</td>
                   <td>{{ produit.categorie }}</td>
-                  <td>{{ produit.quantite }}</td>
                   <td>{{ produit.prix }}</td>
                   <td>{{ produit.description }}</td>
                   <td>{{ produit.stock }}</td> <!-- Affichage du stock -->
-                  <td>{{  formatDate(produit.date)}}</td> <!-- Affichage de la date formatée -->
-                  <!-- <td>{{ getUtilisateurNom(produit.utilisateurId) }}</td> -->
+                  <td>{{  formatDatte(produit.date_entree)}}</td> <!-- Affichage de la date formatée -->
+                  <td :class="{ 'alert-date': isDateLimiteProche(produit.date_limite) }">
+                    {{ formatDate(produit.date_limite) }}
+                  </td>
+                  
 
                   <td class="text-center d-flex">
-                      <button @click="confirmRemoveProduit(produit.id)" class="btn btn-danger btn-sm me-2">
+                      <button v-if="isAdmin" @click="confirmRemoveProduit(produit.id)" class="btn btn-danger btn-sm me-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
                           <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
                         </svg>
@@ -62,19 +64,31 @@
 
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { useAuthStore } from '@stores/authStore';
 import { useProduitStore } from "@stores/produitStore"; // Make sure this is the correct path
 import { useToast } from 'vue-toastification';
 import Swal from 'sweetalert2';
 import moment from 'moment';
 
+const authStore = useAuthStore()
+const isAdmin = computed(() => authStore.utilisateur?.role === 'ADMIN');
 const produitStore = useProduitStore(); // Use your Pinia store for produit management
 const router = useRouter();
 const nom = ref('');
 const produits = ref([]);
-const formatDate = (date) => {
+const formatDatte = (date) => {
   return moment(date).format('YYYY-MM-DD');
+};
+const formatDate = (date_limite) => {
+  return moment(date_limite).format('YYYY-MM-DD');
+};
+const isDateLimiteProche = (date_limite) => {
+  const dateLimite = moment(date_limite);
+  const currentDate = moment();
+  const diffDays = dateLimite.diff(currentDate, 'days');
+  return diffDays <= 10; // Vérifie si la date limite est dans moins de 7 jours
 };
 
 const toast = {
@@ -88,7 +102,7 @@ const toast = {
 onMounted(async () => {
     try {
         await produitStore.loadProduitsData();
-        produits.value = produitStore.produits;
+        produits.value = produitStore.produits.sort((a, b) => a.id - b.id);
     } catch (error) {
         console.error("Erreur lors du chargement des produits :", error.message);
         toast.error("Une erreur est survenue lors du chargement des produits.");
@@ -113,7 +127,7 @@ const confirmRemoveProduit = async (id) => {
             produits.value = produitStore.produits;
         } catch (error) {
             console.error("Erreur lors de la suppression :", error.message);
-            toast.error('Une erreur est survenue lors de la suppression.');
+            toast.error('Impossible de supprimer cette produit car il est liée à d\'autres enregistrements.');
         }
     }
 };
@@ -124,7 +138,12 @@ const confirmRemoveProduit = async (id) => {
     margin: 0 auto;
     max-width: 1200px;
 }
-
+td.alert-date {
+    color: red !important;
+    font-weight: bold;
+  }
+  
+  
 .top-bar {
     display: flex;
     justify-content: space-between;

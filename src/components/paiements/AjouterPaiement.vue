@@ -39,11 +39,7 @@
             <small v-if="errors.commandeId" class="text-danger">{{ errors.commandeId }}</small>
           </div>
           
-          <div class="form-group mb-4 w-100">
-            <label for="date">Date</label>
-            <input type="date" id="date" v-model="date" class="form-control" required />
-            <small v-if="errors.date" class="text-danger">{{ errors.date }}</small>
-          </div>
+        
         </div>
 
         <div class="d-flex justify-content-end gap-5">
@@ -62,7 +58,14 @@ import { useToast } from 'vue-toastification';
 
 const route = useRouter();
 const paiementStore = usePaiementStore();
-const toast = useToast();
+const toast = {
+    success: (message) => {
+        alert(`Succès : ${message}`);
+    },
+    error: (message) => {
+        alert(`Erreur : ${message}`);
+    }
+};
 
 // Form data
 const montant = ref('');

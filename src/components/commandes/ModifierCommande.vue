@@ -1,7 +1,7 @@
 <template>
   <div class="form-container d-flex align-items-center">
     <div class="form-content">
-      <router-link to="/dashboard/receptions" class="btn btn-secondary mb-3">
+      <router-link to="/dashboard/commandes" class="btn btn-secondary mb-3">
         <i class="fas fa-arrow-left"></i>
       </router-link>
 
@@ -10,27 +10,9 @@
           <h2 class="text-center mb-4">Modifier la commande</h2>
 
           <!-- Informations de la commande -->
-          <div class="d-flex gap-2">
-            <div class="w-100">
-              <div class="form-group">
-                <label for="date" class="form-label">Date de commande</label>
-                <input type="date" id="date" v-model="form.date" class="form-control" required />
-                <small v-if="errors.date" class="text-danger">{{ errors.date }}</small>
-              </div>
-            </div>
-          </div>
-          <div class="d-flex justify-content-between gap-3 mt-2">
-            <div class="form-group w-100">
-              <label for="prix" class="form-label">Montant total</label>
-              <input type="number" step="0.01" v-model="form.prix" class="form-control" disabled />
-              <small v-if="errors.prix" class="text-danger">{{ errors.prix }}</small>
-            </div>
-          </div>
-
-          <!-- Détails de la commande -->
           <div>
             <h3>Détails de la commande</h3>
-            <div v-for="(detail, index) in form.details" :key="index" class="d-flex gap-3 mt-3">
+            <div v-for="(detail, index) in form.commandeDetails" :key="index" class="d-flex gap-3 mt-3">
               <div class="w-100">
                 <label class="form-label">Produit</label>
                 <select v-model="detail.produitId" class="form-control" required @change="updateTotalAmount">
@@ -88,7 +70,14 @@ import { useToast } from 'vue-toastification';
 import moment from 'moment';
 
 // Dépendances
-const toast = useToast();
+const toast = {
+  success: (message) => {
+    alert(`Succès : ${message}`);
+  },
+  error: (message) => {
+    alert(`Erreur : ${message}`);
+  }
+};
 const route = useRoute();
 const router = useRouter();
 const commandeStore = useCommandeStore();
@@ -99,9 +88,9 @@ const errors = ref({});
 const produits = ref([]);
 const form = ref({
   date: '',
-  prix: 0,
+  montant: 0,
   utilisateurId: null,
-  details: [{ produitId: '', quantite: 1, prix: 0 }],
+  commandeDetails: [{ produitId: '', quantite: 1, prix: 0 }],
 });
 
 // Charger les produits et les données de la commande
@@ -114,14 +103,21 @@ onMounted(async () => {
     const commandeId = route.params.id;
     const commande = await commandeStore.getCommandeById(commandeId);
 
+    console.log('Commande récupérée:', commande);
+
     form.value.date = commande.date ? moment(commande.date).format('YYYY-MM-DD') : '';
-    form.value.prix = commande.prix || 0;
-  
-    form.value.details = commande.details.map((detail) => ({
-      produitId: detail.produitId,
-      quantite: detail.quantite || 1,
-      prix: produits.value.find((p) => p.id === detail.produitId)?.prix || 0,
-    }));
+    form.value.montant = commande.montant;
+
+    // Assurez-vous que `commandeDetails` est défini
+    if (commande.detailCommandes) {
+      form.value.detailCommandes = commande.detailCommandes.map((detail) => ({
+        produitId: detail.produitId,
+        quantite: detail.quantite || 1,
+        prix: produits.value.find((p) => p.id === detail.produitId)?.prix || 0,
+      }));
+    } else {
+      form.value.detailCommandes = [{ produitId: '', quantite: 1, prix: 0 }];
+    }
   } catch (error) {
     toast.error('Erreur lors du chargement des données');
     console.error(error.message);
@@ -130,20 +126,20 @@ onMounted(async () => {
 
 // Ajouter un détail
 const addDetail = () => {
-  form.value.details.push({ produitId: '', quantite: 1, prix: 0 });
+  form.value.detailCommandes.push({ produitId: '', quantite: 1 });
 };
 
 // Supprimer un détail
 const removeDetail = (index) => {
-  if (form.value.details.length > 1) {
-    form.value.details.splice(index, 1);
+  if (form.value.detailCommandes.length > 1) {
+    form.value.detailCommandes.splice(index, 1);
     updateTotalAmount();
   }
 };
 
 // Mettre à jour le montant total
 const updateTotalAmount = () => {
-  form.value.prix = form.value.details.reduce((total, detail) => {
+  form.value.montant = form.value.detailCommandes.reduce((total, detail) => {
     const produit = produits.value.find((p) => p.id === detail.produitId);
     return total + (produit ? produit.prix * detail.quantite : 0);
   }, 0);
@@ -151,6 +147,7 @@ const updateTotalAmount = () => {
 
 // Soumettre la commande modifiée
 const handleSubmit = async () => {
+  errors.value = {}; // Reset errors
   try {
     // Calculer le montant total
     updateTotalAmount();
@@ -161,16 +158,21 @@ const handleSubmit = async () => {
     // Cloner les données du formulaire
     const updatedCommande = {
       ...form.value,
-      details: form.value.details,
+      detailCommandes: form.value.commandeDetails,
     };
 
     // Soumettre la commande mise à jour
     await commandeStore.updateCommande(route.params.id, updatedCommande);
     toast.success('Commande mise à jour avec succès');
-    router.push('/dashboard/receptions');
+    router.push('/dashboard/commandes');
   } catch (error) {
-    toast.error('Erreur lors de la mise à jour');
-    console.error(error.message);
+    if (error.response && error.response.data && error.response.data.errors) {
+      error.response.data.errors.forEach(err => {
+        errors.value[err.path] = err.msg;
+      });
+    } else {
+      toast.error('Une erreur est survenue lors de l\'ajout.');
+    }
   }
 };
 </script>

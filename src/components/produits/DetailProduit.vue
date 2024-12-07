@@ -7,52 +7,51 @@
         <form class="p-4 shadow-sm bg-white rounded">
           <h2 class="text-center mb-4">Détails de la produit</h2>
           <div class="d-flex gap-2">
-            <div class="w-100">
-              <div class="form-group">
+        
+              <div class="form-group w-100">
                 <label for="nom">Nom</label>
                 <input  id="nom" v-model="produitStore.produit.nom" class="form-control" readonly />
               </div>
-              <div class="form-group">
+              <div class="form-group w-100">
                 <label for="categorie">Catégorie</label>
                 <input  id="categorie" v-model="produitStore.produit.categorie" class="form-control"
                 readonly />
               </div>
             </div>
-            <div class="w-100">
-              <div class="form-group">
-                <label for="quantite">Quantité</label>
-                <input id="quantite" v-model="produitStore.produit.quantite" class="form-control"
-                readonly />
-              </div>
-              <div class="form-group">
+            <div class=" gap-2 d-flex w-100">
+            
+              <div class="form-group w-100">
                 <label for="prix">Prix</label>
                 <input  id="prix" v-model="produitStore.produit.prix" class="form-control" readonly />
               </div>
-            </div>
-          </div>
-          <div class="d-flex gap-2">
-            <div class="w-100">
-              <div class="form-group">
+            
+
+              <div class="form-group w-100">
                 <label for="description">Description</label>
                 <input id="description" v-model="produitStore.produit.description" class="form-control"
                 readonly />
               </div>
             </div>
-            <div class="w-100">
-              <div class="form-group">
-                <label for="date">Date</label>
+            <div class="d-flex w-100 gap-2">
+              <div class="form-group w-100">
+                <label for="date">Date_Entrer</label>
                 <input  id="date" v-model="formattedDate" class="form-control" readonly />
-
               </div>
-            </div>
-          </div>
+                <div class="form-group w-100">
+                  <label for="date">Date_Limite</label>
+                  <input  id="date" v-model="produitStore.produit.date_limite" class="form-control" readonly />
+  
+                </div>
+              </div>
+            
           
 
-            <div class="w-100">
-              <div class="form-group">
+            <div class="d-flex">
+              <div class="form-group w-100">
                 <label for="stock">Stock</label>
                 <input  id="number" v-model="produitStore.produit.stock" class="form-control" readonly />
               </div>
+             
             
           </div>
 
@@ -70,8 +69,8 @@ import { useProduitStore } from '@stores/produitStore';
 import { computed } from 'vue';
 
 const formattedDate = computed(() => {
-  if (produitStore.produit && produitStore.produit.date) {
-    return new Date(produitStore.produit.date).toISOString().split('T')[0];
+  if (produitStore.produit && produitStore.produit.date_entree) {
+    return new Date(produitStore.produit.date_entree).toISOString().split('T')[0];
   }
   return '';
 });

@@ -4,73 +4,71 @@
     <nav class="sidebar" v-if="sidebarVisible">
       <ul class="nav flex-column">
         <li class="nav-item">
-          <router-link to="/dashboard" class="nav-link" active-class="active">
+          <router-link to="/dashboard/home" class="nav-link" active-class="active">
             <i class="fas fa-home"></i> Dashboard
           </router-link>
         </li>
-        <li class="nav-item">
-          <router-link to="/dashboard/utilisateurs" class="nav-link" active-class="active">
+        <li>
+          <router-link :class="{ active: route.path.startsWith('/dashboard/utilisateurs') }" class="nav-link" to="/dashboard/utilisateurs">
             <i class="fas fa-users"></i> Utilisateurs
           </router-link>
+          
         </li>
         <li class="nav-item">
-          <router-link to="/dashboard/produits" class="nav-link" active-class="active">
+          <router-link :class="{ active: route.path.startsWith('/dashboard/produits') }" class="nav-link" to="/dashboard/produits">
             <i class="fas fa-box-open"></i> Produits
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/dashboard/commandes" class="nav-link" active-class="active">
+          <router-link :class="{ active: route.path.startsWith('/dashboard/commandes') }" class="nav-link" to="/dashboard/commandes">
             <i class="fas fa-shopping-cart"></i> Commandes
           </router-link>
         </li>
-        <li class="nav-item">
-          <router-link to="/dashboard/paiements" class="nav-link" active-class="active">
+        <!-- <li class="nav-item">
+          <router-link :class="{ active: route.path.startsWith('/dashboard/paiements') }" class="nav-link" to="/dashboard/paiements">
             <i class="fas fa-credit-card"></i> Paiements
           </router-link>
-        </li>
+        </li> -->
         <li class="nav-item">
-          <router-link to="/dashboard/livraisons" class="nav-link" active-class="active">
+          <router-link :class="{ active: route.path.startsWith('/dashboard/livraisons') }" class="nav-link" to="/dashboard/livraisons">
             <i class="fas fa-truck"></i> Livraisons
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/dashboard/ventes" class="nav-link" active-class="active">
+          <router-link :class="{ active: route.path.startsWith('/dashboard/ventes') }" class="nav-link" to="/dashboard/ventes">
             <i class="fas fa-chart-line"></i> Ventes
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/dashboard/inventaires" class="nav-link" active-class="active">
+          <router-link :class="{ active: route.path.startsWith('/dashboard/inventaires') }" class="nav-link" to="/dashboard/inventaires">
             <i class="fas fa-warehouse"></i> Inventaires
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/dashboard/mouvements" class="nav-link" active-class="active">
-            <i class="fas fa-exchange-alt"></i>
-            Mouvements
+          <router-link :class="{ active: route.path.startsWith('/dashboard/mouvements') }" class="nav-link" to="/dashboard/mouvements">
+            <i class="fas fa-exchange-alt"></i> Mouvements
           </router-link>
-
-          
         </li>
         <li class="nav-item">
-          <router-link to="/dashboard/receptions" class="nav-link" active-class="active">
-            <i class="fas fa-receipt"></i>
-            Receptions
+          <router-link :class="{ active: route.path.startsWith('/dashboard/receptions') }" class="nav-link" to="/dashboard/receptions">
+            <i class="fas fa-receipt"></i> Receptions
           </router-link>
-
-          
         </li>
       </ul>
     </nav>
+    
 
     <!-- Top bar -->
     <div class="top-bar">
       <div class="bar">
       <div class="sidebar-header" @click="toggleSidebar">
-        <img src="@/assets/images/logo.jpg" alt="logo" class="w-10">
+        <i class="fas fa-bars fa-2x"></i>
         <h2>POISSONERIE</h2>
       </div>
 
       <div class="user-info">
+        <i class="fas fa-user-circle text-light me-2"></i>
+        <span v-if="utilisateur">{{ utilisateur.nom }}</span>
         <button @click="logout" class="btn btn-outline-light ms-3">Se déconnecter</button>
       </div>
   
@@ -85,13 +83,19 @@
 </template>
 <script setop>
 import { computed } from 'vue';
-import { useAuthStore } from '@stores/authStore'; // Assuming you are using a store for authentication
-
+import { useAuthStore } from '@stores/authStore';
+import { useRoute } from 'vue-router';
 export default {
   name: 'Dashboard',
   data() {
     return {
-      sidebarVisible: true, // Sidebar is visible by default
+      sidebarVisible: true,
+    };
+  }, setup() {
+    const route = useRoute();
+
+    return {
+      route,
     };
   },
   methods: {
@@ -100,38 +104,69 @@ export default {
     },
     logout() {
       const authStore = useAuthStore();
-      authStore.logout(); 
-      this.$router.push('/');// Ensure the logout function is defined in your auth store
+      authStore.logout();
+      this.$router.push('/'); // Redirect after logout
     }
   },
   computed: {
     isAuthenticated() {
       const authStore = useAuthStore();
       return authStore.isAuthenticated;
-
-    }
+    },
+    utilisateur() {
+      const authStore = useAuthStore();
+      return authStore.utilisateur;
+    },
   }
 };
 </script>
 
 <style scoped>
+.nav-link.active {
+  background-color: #1abc9c; /* Couleur de fond pour l'élément actif */
+  color: white; /* Couleur du texte */
+  border-radius: 5px;
+}
+
 .dashboard {
   display: flex;
   min-height: 100vh;
   background-color: #f8f9fa;
 }
+.bar[data-v-7f773d42] {
+  display: flex;
+  justify-content: space-between;
+  width: 96%;
+  margin: auto;
+}
+.sidebar-header i[data-v-7f773d42] {
+  margin-right: 10px;
+  font-size: 24px;
+  color: white;
+  margin-top: 15px;
+}
 
+.user-info {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #ffffff;
+}
 .bar h2{
   font-weight: bold;
   margin-top: 20px;
   color: white;
 }
-.bar{
-  display: flex;
-  justify-content: space-between;
-  width: 80%;
-  margin: auto;
-}
+.sidebar[data-v-7f773d42][data-v-7f773d42][data-v-7f773d42] {
+  width: 240px;
+  background-color: white;
+  color: #2c3e50;
+  padding: 15px;
+  transition: all 0.3s ease;
+  margin-top: 100px;
+  position: fixed;
+  z-index: 2; }
+
+
 img, svg {
   vertical-align: middle;
   width: 60px;

@@ -30,10 +30,10 @@ export const useVenteStore = defineStore("venteStore", {
 
     // Charger une vente spécifique par ID
     async getVenteById(id) {
-      if (!id || isNaN(parseInt(id, 10))) {
-        console.error("Invalid ID provided:", id);
-        throw new Error("Invalid ID. Please provide a valid ID.");
-      }
+      // if (!id || isNaN(parseInt(id, 10))) {
+      //   console.error("Invalid ID provided:", id);
+      //   throw new Error("Invalid ID. Please provide a valid ID.");
+      // }
 
       const authStore = useAuthStore();
       try {

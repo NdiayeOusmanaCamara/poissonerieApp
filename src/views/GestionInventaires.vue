@@ -26,7 +26,7 @@
                     <td>{{getProduitName (inventaire.produitId) }}</td>
                     <!-- <td>{{ getUtilisateurNom(inventaire.utilisateurId) }}</td> -->
                     <td class="text-center d-flex ">
-                        <button @click="confirmRemoveInventaire(inventaire.id)" class="btn btn-danger btn-sm me-2">
+                        <button v-if="isAdmin" @click="confirmRemoveInventaire(inventaire.id)" class="btn btn-danger btn-sm me-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                 class="bi bi-trash3" viewBox="0 0 16 16">
                                 <path
@@ -52,10 +52,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useInventaireStore } from '@/stores/inventaireStore';
 import moment from 'moment';
+import { useAuthStore } from '@stores/authStore';
+const authStore = useAuthStore()
+const isAdmin = computed(() => authStore.utilisateur?.role === 'ADMIN');
 const store = useInventaireStore();
 const router = useRouter();
 const inventaires = ref([]);

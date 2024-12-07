@@ -7,7 +7,9 @@
       <form class="p-4 shadow-sm bg-white rounded w-50">
         <div v-if="reception" class="reception-details mt-4">
           <h2 class="text-center mb-4">Détails de la réception </h2>
+          <p><strong>Reception ID:</strong> {{ reception.id }}</p>
           <p><strong>Date:</strong> {{ formatDate(reception.date) }}</p>
+          
           <h2 class="text-center mb-4">Produits dans la réception </h2>
           <div v-if="reception.detailReceptions && reception.detailReceptions.length">
 

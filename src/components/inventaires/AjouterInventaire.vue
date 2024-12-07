@@ -30,11 +30,7 @@
 
         <div class="d-flex justify-content-between gap-4">
           <!-- Date Input -->
-          <div class="form-group mb-4 w-100">
-            <label for="date">Date</label>
-            <input type="date" id="date" v-model="date" class="form-control" required />
-            <small v-if="errors.date" class="text-danger">{{ errors.date }}</small>
-          </div>
+        
         </div>
 
         <div class="d-flex justify-content-end gap-5">
@@ -45,23 +41,30 @@
   </div>
 </template>
 
-  
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useInventaireStore } from '@stores/inventaireStore';
 import { useProduitStore } from '@stores/produitStore'; // Assurez-vous que vous avez un store pour les produits
 import { useToast } from 'vue-toastification';
+import moment from 'moment'; // Import moment.js for date manipulation
 
 const route = useRouter();
 const inventaireStore = useInventaireStore();
 const produitStore = useProduitStore();
-const toast = useToast();
+const toast = {
+    success: (message) => {
+        alert(`Succès : ${message}`);
+    },
+    error: (message) => {
+        alert(`Erreur : ${message}`);
+    }
+};
 
 // Form data
 const stock = ref('');
 const produitId = ref('');
-const date = ref('');
+
 
 // Products list
 const produits = ref([]);
@@ -81,11 +84,20 @@ onMounted(async () => {
 // Function to handle form submission
 const addInventaire = async () => {
   errors.value = {}; // Reset errors
+
+  // Validate stock: stock must be greater than 0
+  if (stock.value <= 0) {
+    errors.value.stock = "Le stock doit être supérieur à 0.";
+    return; // Stop form submission if stock is invalid
+  }
+
+ 
+
   try {
     await inventaireStore.addInventaire({
       stock: stock.value,
       produitId: produitId.value,
-      date: date.value,
+
     });
     toast.success('Inventaire ajouté avec succès !');
     route.push("/dashboard/inventaires");
@@ -101,48 +113,48 @@ const addInventaire = async () => {
 };
 </script>
 
-  
-  <style scoped>
-  .form-container {
-    max-width: 800px;
-    margin: 50px auto;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .form-content {
-    flex: 1;
-  }
-  
-  .form-control {
-    padding: 10px 15px;
-    border-radius: 5px;
-    border: 1px solid #ced4da;
-    transition: border-color 0.3s ease;
-  }
-  
-  .form-control:focus {
-    border-color: #007bff;
-    box-shadow: none;
-  }
-  
-  h2 {
-    color: #343a40;
-    font-weight: bold;
-  }
-  
-  .shadow-sm {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .bg-white {
-    background-color: white;
-  }
-  
-  .rounded {
-    border-radius: 8px;
-  }
-  </style>
-  
+
+
+<style scoped>
+.form-container {
+  max-width: 800px;
+  margin: 50px auto;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-content {
+  flex: 1;
+}
+
+.form-control {
+  padding: 10px 15px;
+  border-radius: 5px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: none;
+}
+
+h2 {
+  color: #343a40;
+  font-weight: bold;
+}
+
+.shadow-sm {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bg-white {
+  background-color: white;
+}
+
+.rounded {
+  border-radius: 8px;
+}
+</style>

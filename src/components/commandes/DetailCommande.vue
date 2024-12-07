@@ -7,34 +7,68 @@
       <form class="p-4 shadow-sm bg-white rounded w-100">
         <div v-if="commande" class="commande-details mt-4">
           <h2 class="text-center mb-4">Détails de la Commande</h2>
-          <p><strong>Nom:</strong> {{ commande.nom }}</p>
-          <p><strong>Date:</strong> {{ formatDate(commande.date) }}</p>
+
+          <!-- Affichage des détails de l'utilisateur -->
+          <p><strong>Utilisateur :</strong> {{ commande.utilisateur?.nom || 'Utilisateur inconnu' }}</p>
+          <p><strong>Commande ID :</strong> {{ commande.id }}</p>
+          <p><strong>Date :</strong> {{ formatDate(commande.date) }}</p>
+
           <h2 class="text-center mb-4">Produits de la Commande</h2>
-          <div v-if="commande.details && commande.details.length">
+          <div v-if="commande.detailCommandes && commande.detailCommandes.length">
             <table class="table table-bordered">
               <thead>
                 <tr>
                   <th>Produit</th>
-                  <th>Status</th>
                   <th>Quantité</th>
-                  <th>Montant</th>
+                  <th>Prix Unitaire</th>
+                  <th>Prix total</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(detail, index) in commande.details" :key="index">
+                <tr v-for="(detail, index) in commande.detailCommandes" :key="index">
                   <td>{{ getProduitName(detail.produitId) }}</td>
-                  <td>{{ detail.status }}</td>
-                  <td>{{ detail.quantite }} </td>
+                  <td>{{ detail.quantite }}</td>
+                  <td>{{ detail.produit.prix }}</td>
                   <td>{{ detail.prix }} €</td>
+                  
                 </tr>
               </tbody>
             </table>
           </div>
+
+          <!-- Paiements de la commande -->
+          <!-- <h2 class="text-center mb-4">Paiements</h2>
+          <div v-if="commande.paiements && commande.paiements.length">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Date de Paiement</th>
+                  <th>Montant</th>
+                  <th>Méthode</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(paiement, index) in commande.paiements" :key="index">
+                  <td>{{ formatDate(paiement.date) }}</td>
+                  <td>{{ paiement.montant }} €</td>
+                  <td>{{ paiement.methode }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div> -->
+
+          <!-- Détails de la livraison -->
+          <!-- <h2 class="text-center mb-4">Livraison</h2>
+          <div v-if="commande.detailLivraisons && commande.detailLivraisons.length">
+            <p><strong>Adresse de Livraison :</strong> {{ commande.detailLivraisons[0].adresse }}</p>
+            <p><strong>Date de Livraison :</strong> {{ formatDate(commande.detailLivraisons[0].dateLivraison) }}</p>
+          </div> -->
         </div>
       </form>
     </div>
   </div>
 </template>
+
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
@@ -47,11 +81,11 @@ const commandeStore = useCommandeStore();
 const produitStore = useProduitStore();
 const commande = ref(null);
 
-// Fetching the 'Commande' and related 'DetailCommande' data based on the route ID
+// Fetching the 'Commande' and related data based on the route ID
 onMounted(async () => {
   await commandeStore.fetchCommandes(); // Fetch all 'Commandes'
   await produitStore.loadProduitsData(); // Load product data
-  
+
   commande.value = commandeStore.commandes.find(c => c.id === Number(route.params.id));
 });
 

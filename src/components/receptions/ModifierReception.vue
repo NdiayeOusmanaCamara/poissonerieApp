@@ -88,7 +88,14 @@ import { useToast } from 'vue-toastification';
 import moment from 'moment';
 
 // Dépendances
-const toast = useToast();
+const toast = {
+    success: (message) => {
+        alert(`Succès : ${message}`);
+    },
+    error: (message) => {
+        alert(`Erreur : ${message}`);
+    }
+};
 const route = useRoute();
 const router = useRouter();
 const receptionStore = useReceptionStore();

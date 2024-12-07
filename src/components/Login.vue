@@ -40,7 +40,7 @@ const errorMessage = ref('');
 const handleSubmit = async () => {
   try {
     await store.login(email.value, password.value);
-    router.push("/dashboard"); // Navigation vers le tableau de bord
+    router.push("/dashboard/home"); // Navigation vers le tableau de bord
   } catch (error) {
     errorMessage.value = "Une erreur est survenue lors de la connexion.";
   }

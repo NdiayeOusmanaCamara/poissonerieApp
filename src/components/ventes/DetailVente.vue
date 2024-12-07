@@ -9,12 +9,14 @@
         <h2 class="text-center mb-4">Détails de la Vente</h2>
         <p><strong>Date:</strong> {{ formatDate(vente.date) }}</p>
         <p><strong>Montant Total:</strong> {{ vente.montant }} €</p>
-        <h2 class="text-center mb-4">Produits de la Vente</h2>
+        <p><strong>ID Commande:</strong> {{ vente.commandeId }} </p>
+        <h2 class="text-center mb-4">Commande de la Vente</h2>
         <div v-if="vente.detailVentes && vente.detailVentes.length">
-          <h5>Produits dans la vente :</h5>
+          <h5>Produit dans la vente :</h5>
           <table class="table table-bordered">
             <thead>
               <tr>
+               
                 <th>Produit</th>
                 <th>Quantité</th>
                 <th>Prix unitaire</th>
@@ -22,6 +24,7 @@
             </thead>
             <tbody>
               <tr v-for="(detail, index) in vente.detailVentes" :key="index">
+                
                 <td>{{ getProduitName(detail.produitId) }}</td>
                 <td>{{ detail.quantite }}</td>
                 <td>{{ detail.prix }} €</td>
@@ -40,24 +43,30 @@ import { useVenteStore } from '@stores/venteStore'; // New store for 'Vente'
 import { useProduitStore } from '@stores/produitStore';
 import { useUserStore } from '@stores/utilisateurStore';
 import moment from 'moment';
+import { useCommandeStore } from '@/stores/commandeStore';
 
 const route = useRoute();
 const venteStore = useVenteStore();
 const produitStore = useProduitStore();
 const utilisateurStore = useUserStore();
 const vente = ref(null);
-
+const commandeStore = useCommandeStore();
 // Chargement des données de la vente en fonction de l'ID de la route
 onMounted(async () => {
   await venteStore.fetchVentes(); // Fetching 'Ventes' instead of 'Commandes'
   await produitStore.loadProduitsData();
   await utilisateurStore.loadUserData();
+  await commandeStore.fetchCommandes();
 
   vente.value = venteStore.ventes.find(v => v.id === Number(route.params.id));
 });
 const getProduitName = (produitId) => {
   const produit = produitStore.produits.find(p => p.id === produitId);
   return produit ? produit.nom : 'Produit inconnu';
+};
+const getCommandeName = (commandeId) => {
+  const commande = commandeStore.commandes.find(c => c.id === commandeId);
+  return commande ? commande.nom : 'Commande inconnu';
 };
 // Méthodes utilitaires
 const formatDate = (date) => {

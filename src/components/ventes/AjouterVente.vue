@@ -7,25 +7,50 @@
       <form @submit.prevent="submitVente" class="p-4 shadow-sm bg-white rounded">
         <h2 class="text-center mb-4">Ajouter une vente</h2>
 
+        <!-- Date de vente -->
+        <label for="date" class="form-label">Date de vente</label>
+        <input
+          type="datetime-local"
+          v-model="newVente.date"
+          class="form-control"
+          :min="minDate"
+        />
+        <small v-if="errors.date" class="text-danger">{{ errors.date }}</small>
+
         <div class="d-flex justify-content-between gap-4">
-          
-          <div class="form-group w-100">
-            <label for="date" class="form-label">Date de vente</label>
-            <input type="date" v-model="newVente.date" class="form-control" required />
-            <small v-if="errors.date" class="text-danger">{{ errors.date }}</small>
-          </div>
+        </div>
+        
+        <!-- Prix total -->
+        <div class="form-group w-100">
+          <label for="montant" class="form-label">Prix total</label>
+          <input
+            type="number"
+            step="0.01"
+            v-model="newVente.montant"
+            class="form-control"
+            disabled
+          />
+          <small v-if="errors.montant" class="text-danger">{{ errors.montant }}</small>
         </div>
 
-        <div class="d-flex justify-content-between gap-3 mt-2">
-          <div class="form-group w-100">
-            <label for="prix" class="form-label">Montant total</label>
-            <input type="number" step="0.01" v-model="newVente.montant" class="form-control" disabled />
-            <small v-if="errors.prix" class="text-danger">{{ errors.prix }}</small>
-          </div>
-        </div>
+        <!-- Commande -->
+        <!-- Commande -->
+<div class="col-md-4">
+  <label for="commande" class="form-label">Commande</label>
+  <select v-model="newVente.commandeId" class="form-select" required>
+    <option disabled value="0">Sélectionnez une commande</option>
+    <option v-for="commande in commandes" :key="commande.id" :value="commande.id">
+      {{ commande.id }}
+    </option>
+  </select>
+  <!-- Affichage du message d'erreur si la commande est déjà convertie -->
+  <small v-if="errors.commandeId" class="text-danger">{{ errors.commandeId }}</small>
 
-        <!-- Section Détails de la Vente -->
-        <div>
+</div>
+
+
+        <!-- Détails de la vente (seulement si aucune commande n'est sélectionnée) -->
+        <div v-if="!newVente.commandeId">
           <h3>Détails de la vente</h3>
           <div v-for="(detail, index) in newDetailVente" :key="index" class="row mb-3">
             <div class="col-md-4">
@@ -38,6 +63,7 @@
               </select>
               <small v-if="errors.produitId" class="text-danger">{{ errors.produitId }}</small>
             </div>
+
             <div class="col-md-3">
               <label for="quantite" class="form-label">Quantité</label>
               <input
@@ -46,19 +72,27 @@
                 class="form-control"
                 required
                 @input="updateTotalPrice"
+                min="1" 
               />
-              <small v-if="errors.quantite" class="text-danger">{{ errors.quantite }}</small>
+              <small v-if="detail.quantite <= 0 && detail.quantite !== ''" class="text-danger">
+                La quantité doit être supérieure à zéro
+              </small>
             </div>
+            <div v-if="errors.stock" class="col-12">
+              <small class="text-danger">{{ errors.stock }}</small>
+              </div>
             <div class="col-md-3">
               <label class="form-label">Prix unitaire</label>
               <input
                 type="number"
                 :value="produits.find(p => p.id === detail.produitId)?.prix || 0"
                 class="form-control"
+                
                 disabled
               />
               <small v-if="errors.prix" class="text-danger">{{ errors.prix }}</small>
             </div>
+          
             <div class="col-md-2 d-flex align-items-end">
               <button type="button" class="btn btn-danger" @click="removeDetail(index)">Supprimer</button>
             </div>
@@ -78,31 +112,31 @@
 import { ref, onMounted, computed } from 'vue';
 import { useVenteStore } from '@stores/venteStore';
 import { useProduitStore } from '@stores/produitStore';
-import { useToast } from 'vue-toastification';
-import moment from 'moment';
+import { useCommandeStore } from '@/stores/commandeStore';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const venteStore = useVenteStore();
 const produitStore = useProduitStore();
-
-const toast = useToast();
-
+const commandeStore = useCommandeStore();
+const commandes = ref([]);
 const newVente = ref({
-  date: '',
   montant: 0,
+  utilisateurId: 1,
+  commandeId: 0,
+  date: ''
 });
 
 const newDetailVente = ref([{ produitId: '', quantite: 1 }]);
 const produits = ref([]);
-const utilisateurs = ref([]); // Liste des utilisateurs
 const errors = ref({});
 
 onMounted(async () => {
   try {
     produits.value = await produitStore.loadProduitsData();
+    commandes.value = await commandeStore.fetchCommandes();
   } catch (error) {
-    console.error('Erreur lors du chargement des données :', error.message);
+    console.error('Erreur lors du chargement des produits :', error.message);
   }
 });
 
@@ -126,44 +160,78 @@ const calculateTotalPrice = computed(() => {
 
 const updateTotalPrice = () => {
   newVente.value.montant = calculateTotalPrice.value;
+  errors.value = {};  // Clear previous errors
+
+  newDetailVente.value.forEach((detail) => {
+    // Find the product by ID
+    const produit = produits.value.find(p => p.id === detail.produitId);
+    if (produit) {
+      // Check if the requested quantity exceeds available stock
+      if (detail.quantite > produit.stock) {
+        errors.value.stock = `Stock insuffisant pour le produit ${produit.nom}. Quantité disponible: ${produit.stock}.`;
+      } else {
+        delete errors.value.stock;
+      }
+
+      // Validation: Ensure quantity is positive
+      if (detail.quantite <= 0) {
+        errors.value.quantite = "La quantité doit être positive.";
+      } else {
+        delete errors.value.quantite;
+      }
+    }
+  });
 };
 
 const submitVente = async () => {
-  errors.value = {};
+  errors.value = {};  // Clear any existing errors
+
+  // Vérifiez si la commande sélectionnée a déjà été convertie
+  const selectedCommande = commandes.value.find(c => c.id === newVente.value.commandeId);
+  
+  if (selectedCommande && selectedCommande.isConverted) {
+    errors.value.commandeId = "Cette commande a déjà été convertie en vente.";
+    // Affichez l'alerte pour informer l'utilisateur
+    alert("La commande sélectionnée a déjà été convertie en vente. Veuillez en sélectionner une autre.");
+    return;  // Arrêter la soumission du formulaire
+  }
+
   try {
-    // Formater la date au format ISO 8601
-    const formattedDate = moment(newVente.value.date).toISOString();
-    
-    // Préparer les détails de la vente
-    const venteDetails = newDetailVente.value.map(detail => ({
+    const detailVentesData = newDetailVente.value.map(detail => ({
       quantite: detail.quantite,
-      prix: produits.value.find(p => p.id === detail.produitId)?.prix || 0,
-      produitId: detail.produitId
+      produitId: detail.produitId,
+      prix: produits.value.find(p => p.id === detail.produitId)?.prix || 0
     }));
 
-    // Construire les données à envoyer
     const venteData = {
-      date: formattedDate,
-      details: venteDetails
+      utilisateurId: newVente.value.utilisateurId,
+      commandeId: newVente.value.commandeId,
+      date: newVente.value.date,
+      details: detailVentesData
     };
 
-    // Appeler la fonction du store pour ajouter la vente
+    // Envoi des données au backend
     await venteStore.addVente(venteData);
 
-    toast.success('Vente ajoutée avec succès !');
+    // Message de succès
+    alert('Vente ajoutée avec succès !');
     router.push("/dashboard/ventes");
   } catch (error) {
-    console.error('Erreur lors de l\'ajout de la vente :', error);
-    toast.error('Une erreur est survenue lors de l\'ajout de la vente.');
+    // Gestion des erreurs backend
+    if (error.response && error.response.data && error.response.data.errors) {
+      error.response.data.errors.forEach(err => {
+        errors.value[err.path] = err.msg; // Stocke chaque erreur par son path
+      });
+    } else {
+      // Gestion des erreurs génériques
+      alert('Cette commande a déjà été convertie en vente.');
+    }
   }
 };
 
 
-const resetForm = () => {
-  newVente.value = { date: '', montant: 0 };
-  newDetailVente.value = [{ produitId: '', quantite: 1 }];
-};
 </script>
+
 
 <style scoped>
 /* Styles similaires à ceux du formulaire initial */

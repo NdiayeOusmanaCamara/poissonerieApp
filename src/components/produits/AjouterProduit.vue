@@ -13,23 +13,24 @@
             <small v-if="errors.nom" class="text-danger">{{ errors.nom }}</small>
           </div>
           <div class="col-md-6 form-group mb-3">
+            <label for="nom">Date limite</label>
+            <input type="date" id="date" v-model="date_limite" class="form-control" required />
+            <small v-if="errors.date_limite" class="text-danger">{{ errors.date_limite }}</small>
+          </div>
+          
+          
+          <div class="col-md-6 form-group mb-3">
             <label for="categorie">Catégorie</label>
             <input type="text" id="categorie" v-model="categorie" class="form-control" required />
             <small v-if="errors.categorie" class="text-danger">{{ errors.categorie }}</small>
           </div>
-        </div>
-        <div class="row">
-          <div class="col-md-6 form-group mb-4">
-            <label for="quantite">Quantité</label>
-            <input type="number" id="quantite" v-model="quantite" class="form-control" required />
-            <small v-if="errors.quantite" class="text-danger">{{ errors.quantite }}</small>
-          </div>
           <div class="col-md-6 form-group mb-3">
             <label for="prix">Prix</label>
-            <input type="number" id="prix" v-model="prix" class="form-control" required />
+            <input type="decimal" id="prix" v-model="prix" class="form-control" required />
             <small v-if="errors.prix" class="text-danger">{{ errors.prix }}</small>
           </div>
         </div>
+        
         <div class="row">
           <div class="col-md-6 form-group mb-4">
             <label for="description">Description</label>
@@ -37,16 +38,12 @@
             <small v-if="errors.description" class="text-danger">{{ errors.description }}</small>
           </div>
           <div class="col-md-6 form-group mb-4">
-            <label for="date">Date</label>
-            <input type="date" id="date" v-model="date" class="form-control" required />
-            <small v-if="errors.date" class="text-danger">{{ errors.date }}</small>
-          </div>
-        </div>
-        <div class="form-group mb-3">
-          <label for="stock">Stock</label>
+            <label for="stock">Stock</label>
           <input type="number" id="stock" v-model="stock" class="form-control" required />
           <small v-if="errors.stock" class="text-danger">{{ errors.stock }}</small>
+          </div>
         </div>
+       
         <div class="d-flex justify-content-end gap-5">
           <button type="submit" class="btn btn-success mt-5 w-100">Ajouter produit</button>
         </div>
@@ -77,10 +74,10 @@ const toast = {
 // Fields
 const nom = ref('');
 const categorie = ref('');
-const quantite = ref('');
 const prix = ref('');
 const description = ref('');
-const date = ref('');
+const date_limite = ref('');
+const date_entree = ref('')
 const stock = ref('');
 const errors = ref({});
 
@@ -88,39 +85,26 @@ const errors = ref({});
 const resetForm = () => {
   nom.value = '';
   categorie.value = '';
-  quantite.value = '';
   prix.value = '';
   description.value = '';
-  date.value = '';
+  date_limite.value = '';
+  date_entree.value = new Date(),
   stock.value = '';
 };
 
-// Function to add a product
 const addProduit = async () => {
-  errors.value = {};
+  errors.value = {}; // Clear previous errors
 
-  // Custom validation
-  if (nom.value <= 0) {
-    errors.value.nom = "Le nom doit comporte au moins 3 caractére";
-    return;
-  }
-  if (quantite.value <= 0) {
-    errors.value.quantite = "La quantité doit être supérieure à 0.";
-    return;
-  }
-  if (categorie.value <= 0) {
-    errors.value.categorie = "Le categorie doit être supérieure à 0.";
-    return;
-  }
+  // Get today's date
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set time to 00:00 to compare only dates
 
+  const selectedDate = new Date(date_limite.value);
+  selectedDate.setHours(0, 0, 0, 0); // Set time to 00:00 to compare only dates
 
-  if (prix.value <= 0) {
-    errors.value.prix = "Le prix doit être supérieur à 0.";
-    return;
-  }
-
-  if (stock.value < 0) {
-    errors.value.stock = "Le stock ne peut pas être négatif.";
+  // Validate if the selected date is today or in the future
+  if (selectedDate < today) {
+    errors.value.date_limite = "La date limite doit être aujourd'hui ou dans le futur.";
     return;
   }
 
@@ -128,27 +112,33 @@ const addProduit = async () => {
     await produitStore.addProduit({
       nom: nom.value,
       categorie: categorie.value,
-      quantite: quantite.value,
       prix: prix.value,
       description: description.value,
-      date: date.value,
+      date_limite: date_limite.value,
+      date_entree: new Date(),
       stock: stock.value,
     });
+
+    // Success notification
     toast.success('Produit ajouté avec succès !');
-    resetForm(); // Reset form fields after successful submission
-    route.push("/dashboard/produits"); // Redirect
+    resetForm(); // Clear form after successful submission
+    route.push("/dashboard/produits"); // Redirect after successful submission
+
   } catch (error) {
-    // Handle errors from the server
+    // Handle validation errors from the backend
     if (error.response && error.response.data && error.response.data.errors) {
-      errors.value = error.response.data.errors.reduce((acc, err) => {
-        acc[err.path] = err.msg;
-        return acc;
-      }, {});
+      // Loop through backend errors and assign them to `errors`
+      error.response.data.errors.forEach(err => {
+        errors.value[err.path] = err.msg;
+      });
     } else {
-      toast.error("Une erreur est survenue lors de l'ajout.");
+      // Handle generic error if it's not a validation error
+      toast.error('Une erreur est survenue lors de l\'ajout.');
     }
   }
 };
+
+
 </script>
 
 <style scoped>

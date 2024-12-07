@@ -10,22 +10,26 @@
         <p><strong>Nom de la livraison:</strong> {{ livraison.nom }}</p>
         <p><strong>Contact:</strong> {{ livraison.contact }}</p>
         <p><strong>Date:</strong> {{ formatDate(livraison.date) }}</p>
+        <!-- <p><strong>Status:</strong> {{ livraison.status }}</p> -->
 
-        <h2 class="text-center mb-4">Détails des Commandes Livrés</h2>
+        <h2 class="text-center mb-4">Commande de la livraison</h2>
         <div v-if="livraison.detailLivraisons && livraison.detailLivraisons.length">
+          <h5>Commande dans la livraison :</h5>
           <table class="table table-bordered">
             <thead>
               <tr>
                 
                 <th>commande</th>
                 <th>Status</th>
+                
             
               </tr>
             </thead>
             <tbody>
               <tr v-for="(detail, index) in livraison.detailLivraisons" :key="index">
-                <td>{{  getCommandeName(detail.commandeId) }}</td>
-                <td>{{ detail.status }}</td>
+                <td>{{  detail.commandeId}}</td>
+                <td>{{  detail.status}}</td>
+                
                 
               </tr>
             </tbody>

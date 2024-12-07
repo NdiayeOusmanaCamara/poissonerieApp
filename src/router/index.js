@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Login from '@/components/Login.vue';
 import Dashboard from '@/views/Dashboard.vue';
+import Home from '@/views/Home.vue';
 import GestionUtilisateurs from '@/views/GestionUtilisateurs.vue';
 import GestionLivraisons from '@/views/GestionLivraisons.vue';
 import GestionProduits from '@/views/GestionProduit.vue';
@@ -36,6 +37,7 @@ import DetailMouvement from '@/components/mouvements/DetailMouvement.vue';
 import AjouterReception from '@/components/receptions/AjouterReception.vue';
 import ModifierReception from '@/components/receptions/ModifierReception.vue';
 import DetailReception from '@/components/receptions/DetailReception.vue';
+import ModifierLivraison from '@/components/livraisons/ModifierLivraison.vue';
 
 
 
@@ -62,6 +64,13 @@ const routes = [
     component: Dashboard,
     meta: { requiresAuth: true },
     children: [
+      {
+        path: 'home',
+        name: 'home',
+        component: Home,
+        meta: { requiresAuth: true },
+      },
+     
       {
         path: 'utilisateurs',
         name: 'gestion-utilisateurs',
@@ -234,6 +243,12 @@ const routes = [
     path: 'livraisons/detail/:id',
     name: 'detail-livraison',
     component: DetailLivraison,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: 'livraisons/modifier/:id',
+    name: 'modifier-livraison',
+    component: ModifierLivraison,
     meta: { requiresAuth: true },
   },
   {

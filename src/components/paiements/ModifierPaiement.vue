@@ -20,8 +20,14 @@
             <div class="w-100">
               <div class="form-group">
                 <label for="mode_paiement">Mode de Paiement</label>
-                <input type="text" id="mode_paiement" v-model="form.mode_paiement" class="form-control" required />
-              </div>
+                <select id="mode_paiement" v-model="form.mode_paiement" class="form-control" required>
+                  <option value="" disabled selected></option>
+                  <option value="cash">Cash</option>
+                  <option value="bank_transfer">Bank transfer</option>
+                  <option value="credit_card">Credit Card</option>
+                </select>
+                <small v-if="errors.mode_paiement" class="text-danger">{{ errors.mode_paiement }}</small>
+              </div>              
             </div>
           </div>
 
@@ -37,12 +43,7 @@
               </div>
             </div>
 
-            <div class="w-100">
-              <div class="form-group">
-                <label for="date">Date</label>
-                <input type="date" id="date" v-model="form.date" class="form-control" required />
-              </div>
-            </div>
+           
           </div>
 
           <button type="submit" class="btn btn-success mt-5 w-100">Mettre à jour le Paiement</button>

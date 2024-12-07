@@ -10,15 +10,6 @@
           <h2 class="text-center mb-4">Ajouter une réception</h2>
 
           <!-- Informations de la réception -->
-          <div class="d-flex gap-2">
-            <div class="w-100">
-              <div class="form-group">
-                <label for="date" class="form-label">Date de réception</label>
-                <input type="date" id="date" v-model="form.date" class="form-control" required />
-                <small v-if="errors.date" class="text-danger">{{ errors.date }}</small>
-              </div>
-            </div>
-          </div>
           <div class="d-flex justify-content-between gap-3 mt-2">
             <div class="form-group w-100">
               <label for="montant" class="form-label">Montant total</label>
@@ -38,6 +29,7 @@
                     {{ produit.nom }}
                   </option>
                 </select>
+                <small v-if="errors.produitId" class="text-danger">{{ errors.produitId }}</small>
               </div>
               <div class="w-100">
                 <label class="form-label">Quantité</label>
@@ -48,7 +40,11 @@
                   required
                   min="1"
                   @input="updateTotalMontant"
+                  :class="{'is-invalid': detail.quantite <= 0 && detail.quantite !== ''}"
                 />
+                <small v-if="detail.quantite <= 0 && detail.quantite !== ''" class="text-danger">
+                  La quantité doit être supérieure à zéro
+                </small>
               </div>
               <div class="w-100">
                 <label class="form-label">Prix unitaire</label>
@@ -58,6 +54,7 @@
                   class="form-control"
                   disabled
                 />
+                <small v-if="errors.prix" class="text-danger">{{ errors.prix }}</small>
               </div>
               <div class="w-100 d-flex align-items-end">
                 <button type="button" class="btn btn-danger" @click="removeDetail(index)">
@@ -71,21 +68,30 @@
           </div>
 
           <!-- Soumettre la réception -->
-          <button type="submit" class="btn btn-success mt-5 w-100">Ajouter la réception</button>
+          <button type="submit" class="btn btn-success mt-5 w-100" :disabled="hasInvalidQuantities">
+            Ajouter la réception
+          </button>
         </form>
       </div>
     </div>
   </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useReceptionStore } from '@stores/receptionStore';
 import { useProduitStore } from '@stores/produitStore';
 import { useToast } from 'vue-toastification';
 
 // Dépendances
-const toast = useToast();
+const toast = {
+    success: (message) => {
+        alert(`Succès : ${message}`);
+    },
+    error: (message) => {
+        alert(`Erreur : ${message}`);
+    }
+};
 const router = useRouter();
 const receptionStore = useReceptionStore();
 const produitStore = useProduitStore();
@@ -94,7 +100,6 @@ const produitStore = useProduitStore();
 const errors = ref({});
 const produits = ref([]);
 const form = ref({
-  date: '',
   montant: 0,
   detailReceptions: [{ produitId: '', quantite: 1 }],
 });
@@ -124,28 +129,31 @@ const removeDetail = (index) => {
 
 // Mettre à jour le montant total
 const updateTotalMontant = () => {
+  errors.value = {};
   form.value.montant = form.value.detailReceptions.reduce((total, detail) => {
     const produit = produits.value.find((p) => p.id === detail.produitId);
     return total + (produit ? produit.prix * detail.quantite : 0);
   }, 0);
 };
 
+// Vérifier s'il y a des quantités invalides
+const hasInvalidQuantities = computed(() => {
+  return form.value.detailReceptions.some(detail => detail.quantite <= 0);
+});
+
 // Soumettre la nouvelle réception
 const handleSubmit = async () => {
+  errors.value = {};
   try {
-    // Calculer le montant total
+    // Vérification de la date
     form.value.montant = form.value.detailReceptions.reduce((total, detail) => {
       const produit = produits.value.find((p) => p.id === detail.produitId);
       return total + (produit ? produit.prix * detail.quantite : 0);
     }, 0);
 
-    // Convertir la date en format ISO pour Prisma
-    form.value.date = new Date(form.value.date).toISOString();
-
-    // Cloner les données du formulaire
     const newReception = {
       ...form.value,
-      detailReceptions: form.value.detailReceptions, // Mapper avec la structure attendue par le backend
+      detailReceptions: form.value.detailReceptions,
     };
 
     // Ajouter la réception
