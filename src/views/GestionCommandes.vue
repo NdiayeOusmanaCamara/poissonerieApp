@@ -19,7 +19,7 @@
         </tr>
       </thead>
       <tbody>
-          <tr v-for="(commande, index) in filteredCommandes" :key="index">
+         <tr v-for="(commande, index) in filteredCommandes" :key="index">
             <td>{{ commande.id}}</td>
                                                                              
             <td>{{ formatDate(commande.commande_date) }}</td>
@@ -89,8 +89,10 @@ const formatDate = (date) => {
 
 // Computed property for filtered commandes (example: returning all commandes)
 const filteredCommandes = computed(() => {
-  return store.commandes; // Or you can apply some filtering logic here
+  // Retourner les commandes triées par ID croissant
+  return store.commandes.slice().sort((a, b) => a.id - b.id);
 });
+
 
 // Handling view, edit, and delete actions
 function viewCommande(commande) {

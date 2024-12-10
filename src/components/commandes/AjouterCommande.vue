@@ -65,6 +65,7 @@
         <div class="d-flex justify-content-end gap-5">
           <button type="submit" class="btn btn-success m-3 w-100">Ajouter la commande</button>
         </div>
+        <small v-if="errors.general" class="text-danger">{{ errors.general }}</small>
       </form>
     </div>
   </div>
@@ -104,7 +105,7 @@ onMounted(async () => {
   try {
     produits.value = await produitStore.loadProduitsData();
   } catch (error) {
-    console.error('Erreur lors du chargement des données :', error.message);
+    errors.value.general = 'Erreur lors du chargement des commandes';
   }
 });
 
@@ -171,13 +172,14 @@ const submitCommande = async () => {
     toast.success('Commande ajoutée avec succès !');
     router.push("/dashboard/commandes");
   } catch (error) {
-      if (error.response && error.response.data && error.response.data.errors) {
-          error.response.data.errors.forEach(err => {
-              errors.value[err.path] = err.msg;
-          });
-      } else {
-          toast.error('Une erreur est survenue lors de l\'ajout.');
-      }
+    if (error.response && error.response.data && error.response.data.error) {
+      errors.value.general = error.response.data.error; // Affichage d'erreurs globales
+    }
+    if (error.response && error.response.data.errors) {
+      error.response.data.errors.forEach((err) => {
+        errors.value[err.path] = err.msg; // Affichage d'erreurs spécifiques par champ
+      });
+    }
   }
 };
 </script>

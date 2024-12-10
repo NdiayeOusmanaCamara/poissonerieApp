@@ -5,7 +5,7 @@ import { useAuthStore } from "./authStore";
 export const useLivraisonStore = defineStore("livraisonStore", {
   state: () => ({
     livraisons: [], // Liste des livraisons
-    detailLivraisons: [], // Détails de livraison spécifiques
+     // Détails de livraison spécifiques
     commandes: [], // Liste des utilisateurs (clients)
   }),
 
@@ -41,7 +41,7 @@ export const useLivraisonStore = defineStore("livraisonStore", {
             Authorization: `Bearer ${authStore.token}`,
           },
         });
-        this.detailLivraisons = response.data.detailLivraisons;
+        this.Livraisons = response.data.livra;
         return response.data;
       } catch (error) {
         console.error("Erreur lors du chargement de la livraison :", error.response?.data || error.message);
@@ -71,18 +71,17 @@ export const useLivraisonStore = defineStore("livraisonStore", {
     async updateLivraison(id, updatedLivraison) {
       const authStore = useAuthStore();
       try {
-        if (!updatedLivraison.nom || !updatedLivraison.date || !updatedLivraison.detailLivraisons.length) {
-          throw new Error("Certaines informations obligatoires sont manquantes ou invalides.");
-        }
+        // if (!updatedLivraison.nom || !updatedLivraison.date || !updatedLivraison.commandId  || !updatedLivraison.status.length) {
+        //   throw new Error("Certaines informations obligatoires sont manquantes ou invalides.");
+        // }
 
         const payload = {
           nom: updatedLivraison.nom,
           date: updatedLivraison.date,
           contact: updatedLivraison.contact,
-          detailLivraisons: updatedLivraison.detailLivraisons.map(detail => ({
-            commandeId: detail.commandeId,
-            status: detail.status,
-          })),
+          commandeId: updatedLivraison.commandeId,
+          status: updatedLivraison.status,
+      
         };
 
         await axios.put(`http://localhost:3000/livraisons/${id}`, payload, {

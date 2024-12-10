@@ -19,7 +19,7 @@
                   id="nom"
                   v-model="form.nom"
                   class="form-control"
-                  required
+                  disabled
                 />
                 <small v-if="errors.nom" class="text-danger">{{ errors.nom }}</small>
               </div>
@@ -33,7 +33,7 @@
                   id="contact"
                   v-model="form.contact"
                   class="form-control"
-                  required
+                  disabled
                 />
                 <small v-if="errors.contact" class="text-danger">{{ errors.contact }}</small>
               </div>
@@ -44,39 +44,42 @@
 
           <!-- Détails de la livraison -->
           <div>
-            <h3>Détails de la livraison</h3>
-            <div v-for="(detail, index) in form.detailLivraisons" :key="index" class="d-flex gap-3 mt-3">
+            <!-- <h3>Détails de la livraison</h3>
+            <div v-for="(detail, index) in form.detailLivraisons" :key="index" class="d-flex gap-3 mt-3"> -->
               <div class="w-100">
                 
                 <label class="form-label">Commande</label>
                 <select
-                  v-model="detail.commandeId"
+                  v-model="form.commandeId"
                   class="form-control"
-                  required
+                  disabled
                 >
                   <option disabled value="">Sélectionner une commande</option>
                   <option v-for="commande in commandes" :key="commande.id" :value="commande.id">
                     {{ commande.id }}
                   </option>
                 </select>
+                <small v-if="errors.livraisons && errors.livraisons[index]" class="text-danger">
+                  {{ errors.livraisons[index].message }}
+                </small>
               </div>
               <div class=w-100>
                   <label class="form-label">Status</label>
                   <select
-                    v-model="detail.status"
+                    v-model="form.status"
                     class="form-control"
                     required
                   >
                     <option value="EN_ATTENTE">En attente</option>
-                    <option value="EN_TRANSIT">En transit</option>
-                    <option value="LIVRE">Livré</option>
-                    <option value="ANNULE">Annulé</option>
+                    <option value="EN_COURS">En cours</option>
+                    <option value="LIVREE">Livré</option>
+                    
                   </select>
                   <small v-if="errors.status" class="text-danger">{{ errors.status }}</small>
               
               </div>
 
-              <div class="w-100 d-flex align-items-end">
+              <!-- <div class="w-100 d-flex align-items-end">
                 <button
                   type="button"
                   class="btn btn-danger"
@@ -84,21 +87,22 @@
                 >
                   Supprimer
                 </button>
-              </div>
+              </div> -->
             </div>
-            <button
+            <!-- <button
               type="button"
               @click="addDetail"
               class="btn btn-primary mt-3"
             >
               Ajouter un détail de livraison
-            </button>
-          </div>
+            </button> -->
+         
 
           <!-- Soumettre la livraison -->
           <button type="submit" class="btn btn-success mt-5 w-100">
             Mettre à jour la livraison
           </button>
+          <small v-if="errors.general" class="text-danger">{{ errors.general }}</small>
         </form>
       </div>
     </div>
@@ -124,7 +128,9 @@ const form = ref({
   nom: '',
   contact: '',
   date: '',
-  detailLivraisons: [{ commandeId: '', status: 'EN_ATTENTE' }],
+  commandeId: '', 
+  status: '' 
+
 });
 
 // Chargement des données de la livraison
@@ -137,27 +143,19 @@ onMounted(async () => {
     form.value.nom = livraison.nom;
     form.value.contact = livraison.contact;
     form.value.date = livraison.date ? moment(livraison.date).format('YYYY-MM-DD') : '';
-    form.value.detailLivraisons = livraison.detailLivraisons.map(detail => ({
-      commandeId: detail.commandeId,
-     status: detail.status
-    }));
+    form.value.commandeId = livraison.commandeId;
+    form.value.status = livraison.status
+   
   } catch (error) {
-    alert('Erreur lors du chargement des données');
-    console.error(error.message);
+    errors.value.general = 'Erreur lors du chargement des commandes';
   }
 });
 
 // Ajouter un détail de livraison
-const addDetail = () => {
-  form.value.detailLivraisons.push({ commandeId: '', status: '' });
-};
+
 
 // Supprimer un détail de livraison
-const removeDetail = (index) => {
-  if (form.value.detailLivraisons.length > 1) {
-    form.value.detailLivraisons.splice(index, 1);
-  }
-};
+
 
 // Soumettre les modifications
 const handleSubmit = async () => {
@@ -180,20 +178,20 @@ const handleSubmit = async () => {
 
     const updatedLivraison = {
       ...form.value,
-      detailLivraisons: form.value.detailLivraisons,
+     
     };
 
     await livraisonStore.updateLivraison(route.params.id, updatedLivraison);
     alert('Livraison mise à jour avec succès');
     router.push('/dashboard/livraisons');
   } catch (error) {
-    if (error.response && error.response.data && error.response.data.errors) {
-      errors.value = {};
+    if (error.response && error.response.data && error.response.data.error) {
+      errors.value.general = error.response.data.error; // Affichage d'erreurs globales
+    }
+    if (error.response && error.response.data.errors) {
       error.response.data.errors.forEach((err) => {
-        errors.value[err.path] = err.msg;
+        errors.value[err.path] = err.msg; // Affichage d'erreurs spécifiques par champ
       });
-    } else {
-      alert('error: cette commande est deja converite en livraison');
     }
   }
 };

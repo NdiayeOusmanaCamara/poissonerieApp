@@ -33,41 +33,37 @@
         </div>
 
           <!-- Détails de la livraison -->
-          <div>
+          <!-- <div>
             <h3>Détails de la livraison</h3>
-            <div v-for="(detail, index) in form.details" :key="index" class="d-flex gap-3 mt-3">
+            <div v-for="(detail, index) in form.details" :key="index" class="d-flex gap-3 mt-3"> -->
               <div class="w-100">
                 <label class="form-label">Commande</label>
-                <select v-model="detail.commandeId" class="form-control" required>
+                <select v-model="form.commandeId" class="form-control" required>
                   <option disabled value="">Sélectionner une commande</option>
                   <option v-for="commande in commandes" :key="commande.id" :value="commande.id">
                     {{ commande.id }}
                   </option>
-                </select>
+                </select> <small v-if="errors.livraisons && errors.livraisonslivraisons[index]" class="text-danger">
+                  {{ errors.livraisons[index].message }}
+                </small>
               </div>
               <div class="w-100">
                 <label class="form-label">Statut</label>
-                <select v-model="detail.status" class="form-select" required>
+                <select v-model="form.status" class="form-select" required>
                   <option value="EN_ATTENTE">En attente</option>
-                  <option value="EN_TRANSIT">En transit</option>
-                  <option value="LIVRE">Livré</option>
-                  <option value="ANNULE">Annulé</option>
+                  <option value="EN_COURS">En cours</option>
+                  <option value="LIVREE">Livré</option>
+                 
                 </select>
+                <small v-if="errors.form && errors.details[index]" class="text-danger">
+                  {{ errors.details[index].message }}
+                </small>
               </div>
 
-              <div class="w-100 d-flex align-items-end">
-                <button type="button" class="btn btn-danger" @click="removeDetail(index)">
-                  Supprimer
-                </button>
-              </div>
-            </div>
-            <button type="button" @click="addDetail" class="btn btn-primary mt-3">
-              Ajouter une commande
-            </button>
-          </div>
-
+              
           <!-- Soumettre la livraison -->
           <button type="submit" class="btn btn-success mt-5 w-100">Ajouter la livraison</button>
+          <small v-if="errors.general" class="text-danger">{{ errors.general }}</small>
         </form>
       </div>
     </div>
@@ -102,18 +98,20 @@ const form = ref({
   date: '',
   contact: '',
   
-  details: [{ commandeId: '', status: '', }],
+  commandeId: '',
+  status: 'EN_ATTENTE',
 });
 
 onMounted(async () => {
   try {
     commandes.value = await commandeStore.fetchCommandes();
   } catch (error) {
-    toast.error('Erreur lors du chargement des commandes');
+    errors.value.general = 'Erreur lors du chargement des commandes';
   }
 });
 
 const addDetail = () => {
+  
   const existingCommandes = form.value.details.map(detail => detail.commandeId);
   const selectedCommande = form.value.details[form.value.details.length - 1].commandeId;
   
@@ -122,7 +120,7 @@ const addDetail = () => {
     return;
   }
 
-  form.value.details.push({ commandeId: '', status:''});
+  form.value.details.push({ commandeId: '', status:'EN_ATTENTE'});
 };
 
 const removeDetail = (index) => {
@@ -145,18 +143,19 @@ const handleSubmit = async () => {
 
   try {
     form.value.date = form.value.date ? moment(form.value.date).toISOString() : '';  // Format date to ISO string
-    const newLivraison = { ...form.value, details: form.value.details };
+    const newLivraison = { ...form.value,};
 
     await livraisonStore.addLivraison(newLivraison); // Make the API call
     toast.success('Livraison ajoutée avec succès');
     router.push('/dashboard/livraisons');
   } catch (error) {
-    if (error.response && error.response.data && error.response.data.errors) {
+    if (error.response && error.response.data && error.response.data.error) {
+      errors.value.general = error.response.data.error; // Affichage d'erreurs globales
+    }
+    if (error.response && error.response.data.errors) {
       error.response.data.errors.forEach((err) => {
-        errors.value[err.path] = err.msg; // Store errors by field name
+        errors.value[err.path] = err.msg; // Affichage d'erreurs spécifiques par champ
       });
-    } else {
-      toast.error('cette commande est deja converite en livraison');
     }
   }
 };

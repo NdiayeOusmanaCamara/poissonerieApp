@@ -1,7 +1,7 @@
 
 
 # Application de Gestion Commerciale pour les Poissonneries
-Cette application est conçue pour aider les poissonneries à gérer leurs opérations commerciales quotidiennes de manière efficace. Elle inclut des fonctionnalités telles que la gestion des commandes, des réceptions, des ventes, des utilisateurs, des produits, des paiements, des inventaires, des livraisons, ainsi que des mouvements de stock. Chaque fonctionnalité est pensée pour simplifier et automatiser les processus de gestion afin de maximiser la productivité et l'exactitude des opérations.
+Cette application est conçue pour aider les poissonneries à gérer leurs opérations commerciales quotidiennes de manière efficace. Elle inclut des fonctionnalités telles que la gestion des commandes, des réceptions, des ventes, des utilisateurs, des produits,  des inventaires, des livraisons, ainsi que des mouvements de stock. Chaque fonctionnalité est pensée pour simplifier et automatiser les processus de gestion afin de maximiser la productivité et l'exactitude des opérations.
 
 # Fonctionnalités
 ## Gestion de l'authentification et de la sécurité
@@ -11,14 +11,12 @@ Cette application est conçue pour aider les poissonneries à gérer leurs opér
 
 
 ## Gestion des Commndes
-**Ajouter des commandes** : Ajouter de nouvelles commandes avec des informations comme la date, le statut, le nom, et le prix.  
-**Modification de commande** : Modifier les informations d'une commande existante (statut, montant, etc.).   
+**Ajouter des commandes** : Ajouter de nouvelles commandes avec des informations comme la date, le statut, le nom, et le prix.     
 **Suppression de commande** : Supprimer une commande annulée.   
 **Consulter de commande** : Consulter la liste et les détails des commandes.
 
 ## Gestion des réceptions
-**Ajouter de réception**: Ajouter de nouvelles réceptions avec des informations telles que la date, la quantité reçue et le produit.   
-**Modification de réception** : Modifier les informations d'une réception (date, quantité, etc.).      
+**Ajouter de réception**: Ajouter de nouvelles réceptions avec des informations telles que la date, la quantité reçue et le produit.        
 **Suppression de réception** : Supprimer une réception annulée ou incorrecte.  
 **Consulter de reception** : Consulter les réceptions avec détails du produit.
 
@@ -40,19 +38,14 @@ Cette application est conçue pour aider les poissonneries à gérer leurs opér
 **Suppression de produit** : Supprimer un produit qui n'est plus en stock ou n'est plus pertinent.    
 **Consulter de produit** : Consulter la liste des produits.
 
-## Gestion des paiements
-**Ajouter de paiement**: Ajouter de nouveaux paiements avec des informations comme la date, le montant, et le mode de paiement.  
-**Modification de paiement** : Modifier les informations d'un paiement existant (montant, mode de paiement, etc.).    
-**Suppression de paiement** : Supprimer un paiement.    
-**Consulter de paiement** : Consulter la liste des paiements et leurs détails.
-
 ## Gestion des inventaires
 **Ajouter de inventaire**: Ajouter de nouveaux inventaires avec des informations telles que la quantité, la date et le type.     
 **Suppression de inventaire** : Supprimer un inventaire non pertinent ou épuisé.    
 **Consulter de inventaire** :Consulter les inventaires existants avec des détails comme la quantité et le type.
 
 ## Gestion des livraisons
-**Ajouter de livraison**: Ajouter de nouvelles livraisons avec des informations comme le nom, la date et le contact de livraison.      
+**Ajouter de livraison**: Ajouter de nouvelles livraisons avec des informations comme le nom, la date et le contact de livraison. 
+**Modifier une livraison**: Modifier les informations existant de la livraison    
 **Suppression de livraison** :Supprimer une livraison.    
 **Consulter de livraison** : Consulter les livraisons avec détails du contact et de la date.
 
@@ -86,7 +79,7 @@ npm run dev
 ```
 
 ## Utilisation d'Axios
-L'application de gestion des poissonerie utilise Axios pour gérer la communication avec le serveur backend. Elle permet de récupérer, ajouter, modifier et supprimer des commandes, des produits, des receptions et des des paiement etc... en envoyant des requêtes HTTP.
+L'application de gestion des poissonerie utilise Axios pour gérer la communication avec le serveur backend. Elle permet de récupérer, ajouter, modifier et supprimer des commandes, des produits, des receptions  etc... en envoyant des requêtes HTTP.
 
 ## Autheur
 [NdiayeOusmaneCamara](https://github.com/NdiayeOusmanaCamara)

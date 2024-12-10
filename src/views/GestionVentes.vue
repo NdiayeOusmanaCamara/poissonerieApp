@@ -81,13 +81,16 @@ const toast = {
 };
 // Propriété calculée pour filtrer les ventes
 const filteredVentes = computed(() => {
-  return store.ventes; // Applique une logique de filtrage si nécessaire
-});
-
+  try {
+  return store.ventes.sort((a, b) => a.id - b.id);
+   }     
 // Gestion des actions : Voir, Modifier, Supprimer
+catch (error) {
+        console.error("Erreur lors du chargement des vente :", error.message);
+        toast.error("Une erreur est survenue lors du chargement des produits.");
+    }
 
-
-
+  });
 const confirmRemoveVente = async (id) => {
   const result = await Swal.fire({
     title: 'Êtes-vous sûr ?',

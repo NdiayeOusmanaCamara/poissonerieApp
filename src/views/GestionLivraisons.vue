@@ -14,8 +14,9 @@
           <th scope="col">ID</th>
           <th scope="col">Nom</th>
           <th scope="col">Contact</th>
-          <th scope="col">Status</th>
           <th scope="col">Date</th>
+          <th scope="col">ID commande</th>
+          <th scope="col">Status</th>
           <th class="text-center">Action</th>
         </tr>
       </thead>
@@ -24,8 +25,10 @@
             <td>{{ livraison.id }}</td>
             <td>{{ livraison.nom }}</td>
             <td>{{ livraison.contact }}</td>
+            <td class="text-center">{{ formatDate(livraison.date) }}</td>
+            <td>{{ livraison.commande.id }}</td>
             <td>{{ livraison.status }}</td>
-            <td>{{ formatDate(livraison.date) }}</td>
+           
           <td class="text-center">
             <button v-if="isAdmin" @click="confirmRemoveLivraison(livraison.id)" class="btn btn-danger btn-sm me-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
@@ -84,14 +87,15 @@ onMounted(async() => {
       toast.error("Une erreur est survenue lors du chargement des livraisons.");
   }
 });
-
-// Livraisons filtered by search query
+// Livraisons filtered by search query and sorted by ID
 const filteredLivraisons = computed(() => {
   const query = searchQuery.value.toLowerCase();
-  return livraisonStore.livraisons.filter((livraison) =>
-    livraison.nom.toLowerCase().includes(query)
-  );
+  // Filtre les livraisons par nom et trie par ID croissant
+  return livraisonStore.livraisons
+    .filter((livraison) => livraison.nom.toLowerCase().includes(query))
+    .sort((a, b) => a.id - b.id); // Tri par ID du plus petit au plus grand
 });
+
 
 // Format the delivery date
 const formatDate = (date) => {

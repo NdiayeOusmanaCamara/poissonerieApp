@@ -8,14 +8,14 @@
         <h2 class="text-center mb-4">Ajouter une vente</h2>
 
         <!-- Date de vente -->
-        <label for="date" class="form-label">Date de vente</label>
+        <!-- <label for="date" class="form-label">Date de vente</label>
         <input
           type="datetime-local"
           v-model="newVente.date"
           class="form-control"
           :min="minDate"
         />
-        <small v-if="errors.date" class="text-danger">{{ errors.date }}</small>
+        <small v-if="errors.date" class="text-danger">{{ errors.date }}</small> -->
 
         <div class="d-flex justify-content-between gap-4">
         </div>
@@ -103,6 +103,7 @@
         <div class="d-flex justify-content-end gap-5">
           <button type="submit" class="btn btn-success m-3 w-100">Ajouter la vente</button>
         </div>
+        <small v-if="errors.general" class="text-danger">{{ errors.general }}</small>
       </form>
     </div>
   </div>
@@ -136,7 +137,7 @@ onMounted(async () => {
     produits.value = await produitStore.loadProduitsData();
     commandes.value = await commandeStore.fetchCommandes();
   } catch (error) {
-    console.error('Erreur lors du chargement des produits :', error.message);
+    errors.value.general = 'Erreur lors du chargement des commandes';
   }
 });
 
@@ -217,14 +218,13 @@ const submitVente = async () => {
     alert('Vente ajoutée avec succès !');
     router.push("/dashboard/ventes");
   } catch (error) {
-    // Gestion des erreurs backend
-    if (error.response && error.response.data && error.response.data.errors) {
-      error.response.data.errors.forEach(err => {
-        errors.value[err.path] = err.msg; // Stocke chaque erreur par son path
+    if (error.response && error.response.data && error.response.data.error) {
+      errors.value.general = error.response.data.error; // Affichage d'erreurs globales
+    }
+    if (error.response && error.response.data.errors) {
+      error.response.data.errors.forEach((err) => {
+        errors.value[err.path] = err.msg; // Affichage d'erreurs spécifiques par champ
       });
-    } else {
-      // Gestion des erreurs génériques
-      alert('Cette commande a déjà été convertie en vente.');
     }
   }
 };
