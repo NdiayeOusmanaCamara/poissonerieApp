@@ -44,7 +44,8 @@ Cette application est conçue pour aider les poissonneries à gérer leurs opér
 **Consulter de inventaire** :Consulter les inventaires existants avec des détails comme la quantité et le type.
 
 ## Gestion des livraisons
-**Ajouter de livraison**: Ajouter de nouvelles livraisons avec des informations comme le nom, la date et le contact de livraison. 
+**Ajouter de livraison**: Ajouter de nouvelles livraisons avec des informations comme le nom, la date et le contact de livraison.
+ 
 **Modifier une livraison**: Modifier les informations existant de la livraison    
 **Suppression de livraison** :Supprimer une livraison.    
 **Consulter de livraison** : Consulter les livraisons avec détails du contact et de la date.
